@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "bob-context-graph": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/packages/mcp-server/dist/index.js"],
+      "env": {
+        "BCG_WORKSPACE_ROOT": "${workspaceFolder}",
+        "BCG_CACHE_DIR": "${workspaceFolder}/.context-graph-cache",
+        "WATSONX_API_KEY": "${env:WATSONX_API_KEY}",
+        "WATSONX_PROJECT_ID": "${env:WATSONX_PROJECT_ID}",
+        "WATSONX_BASE_URL": "${env:WATSONX_BASE_URL}",
+        "WATSONX_MODEL_ID": "${env:WATSONX_MODEL_ID}"
+      },
+      "description": "Bob Context Graph — persistent, commit-aware system intelligence for microservice workspaces"
+    }
+  }
+}

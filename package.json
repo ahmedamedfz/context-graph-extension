@@ -1,0 +1,21 @@
+{
+  "name": "bob-context-graph",
+  "version": "0.1.0",
+  "description": "Bob Context Graph - Persistent, commit-aware system intelligence for IBM Bob",
+  "private": true,
+  "workspaces": [
+    "packages/core",
+    "packages/watsonx",
+    "packages/mcp-server",
+    "packages/vscode-extension"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "dev:mcp": "npm run dev --workspace=packages/mcp-server",
+    "build:vsix": "npm run package --workspace=packages/vscode-extension"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

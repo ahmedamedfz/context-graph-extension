@@ -1,0 +1,124 @@
+{
+  "name": "bob-context-graph",
+  "displayName": "Bob Context Graph",
+  "description": "Persistent, commit-aware system intelligence for IBM Bob — visualize microservice dependencies and change impact",
+  "version": "0.1.0",
+  "publisher": "bob-context-graph",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "keywords": ["ibm", "bob", "microservices", "context", "graph", "spring", "watsonx"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./dist/extension.js",
+  "icon": "resources/icon.png",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "bob-context-graph",
+          "title": "Bob Context Graph",
+          "icon": "resources/activity-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "bob-context-graph": [
+        {
+          "id": "bcg.systemOverview",
+          "name": "System Overview",
+          "type": "tree"
+        },
+        {
+          "id": "bcg.serviceExplorer",
+          "name": "Services",
+          "type": "tree"
+        },
+        {
+          "id": "bcg.impactPanel",
+          "name": "Impact Analysis",
+          "type": "tree"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "bcg.openGraph",
+        "title": "Bob Context Graph: Open System Graph",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "bcg.analyzeChanges",
+        "title": "Bob Context Graph: Analyze Changes",
+        "icon": "$(diff)"
+      },
+      {
+        "command": "bcg.refreshContext",
+        "title": "Bob Context Graph: Refresh Context",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "bcg.refreshAll",
+        "title": "Bob Context Graph: Refresh All Services",
+        "icon": "$(sync)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "bcg.openGraph",
+          "when": "view == bcg.systemOverview",
+          "group": "navigation"
+        },
+        {
+          "command": "bcg.refreshAll",
+          "when": "view == bcg.serviceExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "bcg.analyzeChanges",
+          "when": "view == bcg.impactPanel",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Bob Context Graph",
+      "properties": {
+        "bcg.workspaceRoot": {
+          "type": "string",
+          "default": "",
+          "description": "Override workspace root for service discovery (defaults to first workspace folder)"
+        },
+        "bcg.cacheDir": {
+          "type": "string",
+          "default": "",
+          "description": "Directory to store the context cache (defaults to <workspaceRoot>/.context-graph-cache)"
+        },
+        "bcg.mcpServerPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the MCP server entry point (optional, for custom setups)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "tsc && node esbuild.js",
+    "build:watch": "tsc --watch",
+    "package": "vsce package --no-dependencies",
+    "lint": "echo ok"
+  },
+  "dependencies": {
+    "@bob-context-graph/core": "0.1.0",
+    "@bob-context-graph/watsonx": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.20.0"
+  }
+}
