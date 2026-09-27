@@ -55,6 +55,8 @@ export interface ServiceContext {
     fileCount: number;
     status: 'Indexed' | 'Cached' | 'Changed' | 'Analyzing' | 'Error';
     error?: string;
+    /** Stack that was detected for this service (spring-boot, node, python, go, unknown) */
+    detectedStack?: DetectedStack;
 }
 export type NodeType = 'SERVICE' | 'DATABASE';
 export interface GraphNode {
@@ -69,6 +71,8 @@ export interface DatabaseNodeData {
     name: string;
     tables: DatabaseTable[];
     ownerServiceId: string;
+    /** F17: all service IDs that share this database */
+    ownerServiceIds?: string[];
 }
 export type EdgeType = 'SERVICE_DEPENDS_ON_SERVICE' | 'SERVICE_USES_DATABASE';
 export interface GraphEdge {
@@ -118,6 +122,7 @@ export interface ImpactReport {
     migrationRecommendations: string[];
     changeInterpretation?: string;
 }
+export type DetectedStack = 'spring-boot' | 'node' | 'python' | 'go' | 'unknown';
 export interface DiscoveredService {
     serviceId: string;
     name: string;
@@ -126,6 +131,6 @@ export interface DiscoveredService {
     branch: string;
     commitHash: string;
     isGitRepo: boolean;
-    detectedStack: 'spring-boot' | 'unknown';
+    detectedStack: DetectedStack;
 }
 //# sourceMappingURL=types.d.ts.map

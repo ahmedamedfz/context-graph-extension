@@ -61,6 +61,11 @@
         "command": "bcg.refreshAll",
         "title": "Bob Context Graph: Refresh All Services",
         "icon": "$(sync)"
+      },
+      {
+        "command": "bcg.configureAI",
+        "title": "Bob Context Graph: Configure AI Provider",
+        "icon": "$(settings-gear)"
       }
     ],
     "menus": {
@@ -99,6 +104,27 @@
           "type": "string",
           "default": "",
           "description": "Path to the MCP server entry point (optional, for custom setups)"
+        },
+        "bcg.aiProvider": {
+          "type": "string",
+          "enum": ["watsonx", "local", "none"],
+          "enumDescriptions": [
+            "IBM watsonx.ai cloud service (requires API key and project ID)",
+            "Local IBM Granite 4.2 3B via Ollama (no credentials needed)",
+            "Deterministic analysis only — no AI-powered summaries"
+          ],
+          "default": "none",
+          "description": "AI provider used for service summaries and impact analysis. Set automatically by the setup wizard."
+        },
+        "bcg.watsonxBaseUrl": {
+          "type": "string",
+          "default": "https://us-south.ml.cloud.ibm.com",
+          "description": "watsonx.ai base URL (advanced — change only when targeting a different region)"
+        },
+        "bcg.watsonxModelId": {
+          "type": "string",
+          "default": "ibm/granite-3-8b-instruct",
+          "description": "watsonx.ai model ID to use for text generation"
         }
       }
     }

@@ -4,6 +4,11 @@ import { DatabaseTable, DatabaseColumn, DatabaseRelationship } from '../models/t
 
 /**
  * Parses Spring/JPA entity classes to extract database schema information.
+ *
+ * F16 fixes:
+ * - Bind @Id/@Column/@Transient to the *exact next* field declaration, not a 3-line window
+ * - Prevent annotation bleed from one field to an unrelated adjacent field
+ * - Respect @Transient correctly
  */
 export class JpaEntityParser {
   /**
@@ -38,7 +43,7 @@ export class JpaEntityParser {
     // Determine table name
     const tableName = this.extractTableName(content, className);
 
-    // Extract columns
+    // Extract columns using the annotation-aware parser
     const columns = this.extractColumns(content);
 
     // Extract relationships
@@ -64,46 +69,94 @@ export class JpaEntityParser {
       .replace(/^_/, '');
   }
 
+  /**
+   * F16: Walk through the class body line-by-line, accumulating annotations
+   * into a "pending" set and attaching them to the VERY NEXT field declaration.
+   * This prevents annotation bleed from one field to the next.
+   */
   private extractColumns(content: string): DatabaseColumn[] {
     const columns: DatabaseColumn[] = [];
     const lines = content.split('\n');
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
+    // Pending annotation state for the current block
+    let pendingId = false;
+    let pendingTransient = false;
+    let pendingColumn: string | null = null;
+    let pendingRelationship = false;
 
-      // Look for field declarations with @Column or @Id
-      const hasId = lines.slice(Math.max(0, i - 3), i + 1).some(l => /@Id/.test(l));
-      const columnAnnotation = lines
-        .slice(Math.max(0, i - 3), i + 1)
-        .find(l => /@Column/.test(l));
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
 
-      // Parse field line: e.g. private UUID id; or private Integer customerId;
+      // Detect annotations — reset pending state for each NEW annotation block
+      // (we treat consecutive annotation lines as one block)
+      if (line.startsWith('@')) {
+        if (/@Id\b/.test(line)) { pendingId = true; }
+        if (/@Transient\b/.test(line)) { pendingTransient = true; }
+        if (/@Column\b/.test(line)) { pendingColumn = line; }
+        if (/@ManyToOne|@OneToMany|@ManyToMany|@OneToOne/.test(line)) {
+          pendingRelationship = true;
+        }
+        // Keep scanning — next non-annotation, non-blank line is the field
+        continue;
+      }
+
+      // Blank lines or method/class declarations reset the pending block
+      if (line.length === 0 || line.startsWith('public class') || line.startsWith('private class')) {
+        pendingId = false;
+        pendingTransient = false;
+        pendingColumn = null;
+        pendingRelationship = false;
+        continue;
+      }
+
+      // Try to match a field declaration
       const fieldMatch = line.match(
-        /(?:private|protected|public)\s+([\w<>]+(?:\[\])?)\s+(\w+)\s*(?:=.*)?;/
+        /(?:private|protected|public)\s+([\w<>[\]]+)\s+(\w+)\s*(?:=.*)?;/
       );
 
-      if (!fieldMatch) continue;
+      if (!fieldMatch) {
+        // This line is not a field declaration — if it looks like a method, reset pending
+        if (/(?:public|private|protected)\s+\w+\s+\w+\s*\(/.test(line)) {
+          pendingId = false;
+          pendingTransient = false;
+          pendingColumn = null;
+          pendingRelationship = false;
+        }
+        continue;
+      }
 
       const [, javaType, fieldName] = fieldMatch;
 
-      // Skip non-column fields (relationships are handled separately)
+      // Capture current pending state and reset it immediately
+      const isId = pendingId;
+      const isTransient = pendingTransient;
+      const columnAnnotation = pendingColumn;
+      const isRelationship = pendingRelationship;
+
+      // Reset for next field
+      pendingId = false;
+      pendingTransient = false;
+      pendingColumn = null;
+      pendingRelationship = false;
+
+      // F16: Skip @Transient fields
+      if (isTransient) continue;
+
+      // Skip relationship fields — handled separately
+      if (isRelationship) continue;
+
+      // Skip collection types that aren't direct columns
       if (
-        /@ManyToOne|@OneToMany|@ManyToMany|@OneToOne/.test(
-          lines.slice(Math.max(0, i - 3), i + 1).join(' ')
-        )
+        javaType.startsWith('List') ||
+        javaType.startsWith('Set') ||
+        javaType.startsWith('Collection')
       ) {
         continue;
       }
 
-      // Skip collections that aren't direct columns
-      if (javaType.startsWith('List') || javaType.startsWith('Set') || javaType.startsWith('Collection')) {
-        continue;
-      }
-
-      const isPrimaryKey = hasId || fieldName === 'id';
+      const isPrimaryKey = isId || fieldName === 'id';
       const columnName = this.extractColumnName(columnAnnotation, fieldName);
       const sqlType = this.javaTypeToSql(javaType);
-
       const isNullable = !isPrimaryKey && !(columnAnnotation && /nullable\s*=\s*false/.test(columnAnnotation));
 
       columns.push({
@@ -118,7 +171,7 @@ export class JpaEntityParser {
     return columns;
   }
 
-  private extractColumnName(annotation: string | undefined, fieldName: string): string {
+  private extractColumnName(annotation: string | null, fieldName: string): string {
     if (annotation) {
       const m = annotation.match(/@Column\s*\(\s*(?:name\s*=\s*)?["']([^"']+)["']/);
       if (m) return m[1];
@@ -162,16 +215,17 @@ export class JpaEntityParser {
       const line = lines[i].trim();
 
       let relType: DatabaseRelationship['type'] | null = null;
-      if (/@ManyToOne/.test(line)) relType = 'ManyToOne';
-      else if (/@OneToMany/.test(line)) relType = 'OneToMany';
-      else if (/@ManyToMany/.test(line)) relType = 'ManyToMany';
-      else if (/@OneToOne/.test(line)) relType = 'OneToOne';
+      if (/@ManyToOne\b/.test(line)) relType = 'ManyToOne';
+      else if (/@OneToMany\b/.test(line)) relType = 'OneToMany';
+      else if (/@ManyToMany\b/.test(line)) relType = 'ManyToMany';
+      else if (/@OneToOne\b/.test(line)) relType = 'OneToOne';
 
       if (!relType) continue;
 
-      // Look at the next few lines for the field declaration
-      for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+      // Look at the next non-annotation, non-blank lines for the field declaration
+      for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
         const fieldLine = lines[j].trim();
+        if (fieldLine.startsWith('@') || fieldLine.length === 0) continue;
         const fieldMatch = fieldLine.match(
           /(?:private|protected|public)\s+(?:List|Set|Collection)?<?(\w+)>?\s+(\w+)\s*[;=]/
         );
@@ -184,6 +238,8 @@ export class JpaEntityParser {
           });
           break;
         }
+        // Stop at a method declaration
+        if (/(?:public|private|protected)\s+\w+\s+\w+\s*\(/.test(fieldLine)) break;
       }
     }
 
@@ -192,11 +248,12 @@ export class JpaEntityParser {
 
   private findJavaFiles(dir: string): string[] {
     const results: string[] = [];
+    const SKIP = new Set(['target', '.git', 'node_modules', 'test', 'build', 'dist']);
     try {
       const walk = (current: string) => {
         const entries = fs.readdirSync(current, { withFileTypes: true });
         for (const entry of entries) {
-          if (['target', '.git', 'node_modules', 'test'].includes(entry.name)) continue;
+          if (SKIP.has(entry.name)) continue;
           const full = path.join(current, entry.name);
           if (entry.isDirectory()) {
             walk(full);

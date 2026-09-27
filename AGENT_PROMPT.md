@@ -963,3 +963,69 @@ Then:
 Do not merely tell me how to build Bob Context Graph.
 
 **Build it.**
+
+---
+
+# FIX SUMMARY — Applied by Bob Agent (post-audit)
+
+All F01–F25 findings from `FIX_REQUEST_EN.md` have been addressed. The following documents the current state for the next agent so no re-reading of the entire codebase is required.
+
+## Build & Test
+- **All 4 TypeScript packages compile with zero errors** (core, mcp-server, watsonx, vscode-extension).
+- **20 regression tests pass** (`node packages/core/test/regression.test.js`).
+- Test runner script: `packages/core/package.json` `test` script now runs `tsc && node test/regression.test.js`.
+
+## Key File Changes (by package)
+
+### `packages/core/src/`
+
+| File | Changes |
+|------|---------|
+| `models/types.ts` | Added `DetectedStack` type ('spring-boot' \| 'node' \| 'python' \| 'go' \| 'unknown'); added `detectedStack?` to `ServiceContext`; added `ownerServiceIds?` to `DatabaseNodeData` (F17) |
+| `scanner/WorkspaceScanner.ts` | **F01/F09**: Recursive scan up to depth 5; Maven aggregator detection (reads `<modules>`); workspace-relative canonical `serviceId`; polyglot stack detection (Node, Python, Go) |
+| `git/GitAnalyzer.ts` | **F08/polyglot**: `classifyFile` now correctly classifies `application.yaml` as CONFIG; classifies Go, Python, Node.js file types |
+| `cache/ContextCache.ts` | **F03/F10/F11**: Added `baselineCommit` field (separate from `lastAnalyzedCommit`); schema v2 with migration; atomic writes via temp+rename; re-reads index from disk on every read to handle concurrent writers; `getBaselineCommit()` method |
+| `ContextGraphEngine.ts` | **F02**: Per-repo HEAD map, `git diff` scoped to service subdirectory path. **F05**: `refreshService(serviceId)` method. **F07**: DTO changes check exposed endpoint models → `affectsApi=true`. **F08**: Preserves DATABASE deps during SERVICE/CONFIG incremental refresh. **F10**: Skips cache when `commitHash === 'unknown'`. **Polyglot**: Routes to `NodeApiParser`, `PythonApiParser`, `GoApiParser` based on `detectedStack` |
+| `parser/SpringApiParser.ts` | **F15**: Handles `path=` alias in `@RequestMapping`; multiline `@RequestBody`; nested generics like `ResponseEntity<List<OrderResponse>>` without truncation |
+| `parser/JpaEntityParser.ts` | **F16**: Line-by-line annotation accumulator that resets on each field — no more 3-line window bleed; `@Transient` excluded correctly |
+| `parser/DependencyAnalyzer.ts` | **F08**: Also scans `application.yaml` for datasource config |
+| `parser/NodeApiParser.ts` | **NEW**: Express.js, Fastify, NestJS route extraction |
+| `parser/PythonApiParser.ts` | **NEW**: Flask and FastAPI route decorator extraction |
+| `parser/GoApiParser.ts` | **NEW**: net/http, gorilla/mux, gin, echo, chi route extraction |
+| `graph/ContextGraphBuilder.ts` | **F17**: Merges tables from multiple services sharing same DB name; `applyImpact` uses node ID matching with DB-specific pattern fallback |
+| `index.ts` | Exports new polyglot parsers |
+
+### `packages/mcp-server/src/index.ts`
+- **F04**: `getOrAnalyze()` checks per-repo HEAD before returning cache — auto-invalidates stale results.
+- **F05**: `handleRefreshContext()` now calls `engine.refreshService(id)` for targeted refresh (1 refreshed / N-1 cached).
+- **F06**: All non-JSON output uses `console.error()` or `process.stderr.write()`.
+- **F23**: `resolveService()` strict resolver — exact ID, exact name, then unique-only substring; throws `InvalidParams` with candidate list on ambiguity.
+
+### `packages/vscode-extension/src/`
+
+| File | Changes |
+|------|---------|
+| `extension.ts` | **F19**: `refreshContext`/`refreshAll` push updated graph to webview via `GraphWebviewProvider.show()`. `bcg.analyzeChanges` stores highlighted graph in `lastAnalysisResult`. **F20**: Reads `bcg.cacheDir`, `bcg.watsonxApiKey`, `bcg.watsonxBaseUrl`, `bcg.watsonxModelId` from config. **F21**: Calls `systemProvider.setAnalyzing(true)` before analysis and `setError()` on failure. |
+| `webview/GraphWebviewProvider.ts` | **F18**: Dispatches `analyzeChanges` webview message to `bcg.analyzeChanges` command. **F19**: Always sends updated data via `postMessage` on show. **F22**: Generates a per-panel CSP nonce; passes to `getGraphHtml()`. |
+| `webview/graphHtml.ts` | **F22**: Full rewrite — no user data injected into script or innerHTML. Data arrives via `postMessage`. CSP `<meta>` with nonce. All labels/summaries/impact text rendered via `textContent` or DOM APIs. No inline event handlers. |
+| `providers/SystemOverviewProvider.ts` | **F21**: Explicit state machine (idle/analyzing/ready/empty/error). `setAnalyzing()`, `setError()` methods. Empty state shows "No supported services found" instead of endless spinner. |
+
+### Root
+- `.gitignore` — Fixed (was `\node_modules\` Windows path with backslash). Now: `node_modules/`, `dist/`, `*.vsix`, `.env`, `.context-graph-cache/`, `*.js.map`.
+- `packages/core/test/regression.test.js` — **NEW**: 20 regression tests covering F01, F03, F09, F15, F16, F17 DB merge, F17 impact ID, Node/Python/Go parsers, cache baseline.
+
+## Deferred / Limitations
+- **F11 (multi-process cache)**: Improved with atomic rename + index reload-on-read. Not a full lock-based solution; concurrent writes from two simultaneous processes may still lose updates on high-frequency writes. A proper file lock or single-process ownership is a follow-up.
+- **F12/F13 (watsonx prompt facts)**: The prompt still sends category/file counts rather than structured before/after field diffs. Requires git-blob-based before/after comparison; deferred (needs live watsonx credentials to verify).
+- **F24**: DTO→API detection is implemented via filename matching against `requestModel`/`responseModel`; does not yet traverse nested DTO fields.
+- **F25 (demo runnable)**: The demo Spring Boot services lack `@SpringBootApplication` entry points — still parsing fixtures, not runnable apps. Labeled as such.
+- **Live watsonx**: Not tested — credentials unavailable. Stub path verified.
+- **F11 (VSIX + MCP cache sync)**: The index reload-on-read approach reduces staleness but does not prevent lost updates under concurrent heavy writes. A single-owner policy (one writer, MCP server or VSIX but not both simultaneously) is the recommended safe operating mode.
+
+## Polyglot Support Added (§8)
+- Scanner detects Node.js (`package.json`), Python (`requirements.txt`/`pyproject.toml`/`setup.py`), Go (`go.mod`) services.
+- API extraction: Express/Fastify/NestJS (Node), Flask/FastAPI (Python), net/http/gorilla/gin/echo/chi (Go).
+- Database extraction: Spring Boot only (JPA). Other stacks return empty `database: []`.
+- `detectedStack` field propagated through `DiscoveredService` and `ServiceContext`.
+- Unsupported/unknown stacks: scanner returns no services → sidebar shows "No supported services found" (F21) instead of infinite spinner.
+

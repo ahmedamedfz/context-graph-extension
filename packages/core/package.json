@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
-    "test": "echo ok"
+    "test": "npm run build && node test/regression.test.js"
   },
   "dependencies": {},
   "devDependencies": {

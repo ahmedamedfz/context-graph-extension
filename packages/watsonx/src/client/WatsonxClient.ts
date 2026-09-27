@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import { LlmClient } from './LlmClient';
 
 export interface WatsonxConfig {
   apiKey: string;
@@ -16,7 +17,7 @@ interface TokenResponse {
  * IBM watsonx.ai REST client.
  * Handles authentication and text generation requests.
  */
-export class WatsonxClient {
+export class WatsonxClient implements LlmClient {
   private config: WatsonxConfig;
   private http: AxiosInstance;
   private accessToken: string | null = null;

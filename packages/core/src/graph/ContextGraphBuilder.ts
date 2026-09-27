@@ -4,6 +4,7 @@ import {
   GraphEdge,
   ServiceContext,
   DatabaseNodeData,
+  DatabaseTable,
 } from '../models/types';
 
 /**
@@ -12,11 +13,14 @@ import {
 export class ContextGraphBuilder {
   /**
    * Build a complete system graph from all service contexts.
+   * F17: merge tables from multiple services that share the same database name.
    */
   build(services: ServiceContext[]): SystemContextGraph {
     const nodes: GraphNode[] = [];
     const edges: GraphEdge[] = [];
-    const dbNodes = new Map<string, GraphNode>();
+
+    // F17: Accumulate tables per DB node — multiple services may share a DB
+    const dbNodeDataMap = new Map<string, { tables: DatabaseTable[]; ownerServiceIds: string[] }>();
 
     // Create service nodes
     for (const svc of services) {
@@ -30,34 +34,54 @@ export class ContextGraphBuilder {
       // Create database nodes for each table group
       const dbNames = this.inferDatabaseNames(svc);
       for (const dbName of dbNames) {
-        if (!dbNodes.has(dbName)) {
-          const dbNodeData: DatabaseNodeData = {
-            name: dbName,
-            tables: svc.database,
-            ownerServiceId: svc.identity.serviceId,
-          };
-          const dbNode: GraphNode = {
-            id: `db:${dbName}`,
-            type: 'DATABASE',
-            label: dbName,
-            data: dbNodeData,
-          };
-          dbNodes.set(dbName, dbNode);
+        // Merge tables when multiple services share the same DB
+        const existing = dbNodeDataMap.get(dbName);
+        if (existing) {
+          // Add tables not already present (by tableName)
+          for (const table of svc.database) {
+            if (!existing.tables.find(t => t.tableName === table.tableName)) {
+              existing.tables.push(table);
+            }
+          }
+          if (!existing.ownerServiceIds.includes(svc.identity.serviceId)) {
+            existing.ownerServiceIds.push(svc.identity.serviceId);
+          }
+        } else {
+          dbNodeDataMap.set(dbName, {
+            tables: [...svc.database],
+            ownerServiceIds: [svc.identity.serviceId],
+          });
         }
 
-        // Add Service → Database edge
-        edges.push({
-          id: `${svc.identity.serviceId}->db:${dbName}`,
-          type: 'SERVICE_USES_DATABASE',
-          source: svc.identity.serviceId,
-          target: `db:${dbName}`,
-          label: 'uses',
-        });
+        // Add Service → Database edge (deduplicated)
+        const edgeId = `${svc.identity.serviceId}->db:${dbName}`;
+        if (!edges.find(e => e.id === edgeId)) {
+          edges.push({
+            id: edgeId,
+            type: 'SERVICE_USES_DATABASE',
+            source: svc.identity.serviceId,
+            target: `db:${dbName}`,
+            label: 'uses',
+          });
+        }
       }
     }
 
     // Add database nodes to main nodes array
-    nodes.push(...dbNodes.values());
+    for (const [dbName, dbData] of dbNodeDataMap) {
+      const dbNodeData: DatabaseNodeData = {
+        name: dbName,
+        tables: dbData.tables,
+        ownerServiceId: dbData.ownerServiceIds[0],
+        ownerServiceIds: dbData.ownerServiceIds,
+      };
+      nodes.push({
+        id: `db:${dbName}`,
+        type: 'DATABASE',
+        label: dbName,
+        data: dbNodeData,
+      });
+    }
 
     // Create service → service dependency edges
     for (const svc of services) {
@@ -89,18 +113,35 @@ export class ContextGraphBuilder {
 
   /**
    * Apply impact highlighting to graph nodes.
+   * F17: Match using nodeId (e.g. db:orders_db) if present, else fall back to label matching.
    */
   applyImpact(
     graph: SystemContextGraph,
-    impacts: Array<{ component: string; severity: 'HIGH' | 'MEDIUM' | 'LOW'; reason: string }>
+    impacts: Array<{ component: string; severity: 'HIGH' | 'MEDIUM' | 'LOW'; reason: string; nodeId?: string }>
   ): SystemContextGraph {
     const updatedNodes = graph.nodes.map(node => {
-      const impact = impacts.find(
-        i =>
-          i.component.toLowerCase().includes(node.label.toLowerCase()) ||
-          node.label.toLowerCase().includes(i.component.toLowerCase()) ||
-          node.id.toLowerCase().includes(i.component.toLowerCase())
-      );
+      // F17: prefer explicit nodeId match over label substring matching
+      const impact = impacts.find(i => {
+        if (i.nodeId) return i.nodeId === node.id;
+        const comp = i.component.toLowerCase();
+        const nodeLabel = node.label.toLowerCase();
+        const nodeId = node.id.toLowerCase();
+        // Exact label or ID match
+        if (comp === nodeLabel || comp === nodeId) return true;
+        // For DB nodes: "order-service Database" → check if node label is a substring of the service name
+        if (node.type === 'DATABASE' && comp.includes('database')) {
+          // Extract service base name from component: "order-service Database" → "order"
+          const servicePart = comp.replace(/\s*database\s*/g, '').replace(/-service$/, '').trim();
+          // Check if the DB label contains the service name prefix
+          const dbBase = nodeLabel.replace(/_db$/, '').replace(/_v\d+$/, '');
+          return dbBase.startsWith(servicePart) || servicePart.startsWith(dbBase);
+        }
+        // Substring fallback for non-DB nodes
+        if (node.type !== 'DATABASE') {
+          return comp.includes(nodeLabel) || nodeLabel.includes(comp);
+        }
+        return false;
+      });
 
       if (impact) {
         return { ...node, impactSeverity: impact.severity, impactReason: impact.reason };

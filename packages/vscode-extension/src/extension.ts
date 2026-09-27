@@ -1,20 +1,22 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { ContextGraphEngine, ServiceContext, SystemContextGraph } from '@bob-context-graph/core';
-import { WatsonxClient, WatsonxRuntime } from '@bob-context-graph/watsonx';
+import { WatsonxRuntime } from '@bob-context-graph/watsonx';
 import { SystemOverviewProvider } from './providers/SystemOverviewProvider';
 import { ServiceExplorerProvider } from './providers/ServiceExplorerProvider';
 import { ImpactPanelProvider } from './providers/ImpactPanelProvider';
 import { GraphWebviewProvider } from './webview/GraphWebviewProvider';
 import { ImpactReport } from '@bob-context-graph/core';
+import { runAiSetup, restoreAiProvider, getStoredProvider } from './ai/AiSetup';
 
 let engine: ContextGraphEngine | null = null;
 let watsonxRuntime: WatsonxRuntime | null = null;
 let lastAnalysisResult: { services: ServiceContext[]; graph: SystemContextGraph } | null = null;
 
-export function activate(context: vscode.ExtensionContext) {
-  console.log('[BCG] Extension activating');
+// F19: track whether an initial analysis has completed (vs. is still in progress)
+let analysisCompleted = false;
 
+export async function activate(context: vscode.ExtensionContext) {
   // ── Setup engine ──────────────────────────────────────────────────────
   const workspaceRoot = getWorkspaceRoot();
   if (!workspaceRoot) {
@@ -22,15 +24,21 @@ export function activate(context: vscode.ExtensionContext) {
     return;
   }
 
-  const cacheDir = path.join(workspaceRoot, '.context-graph-cache');
+  // F20: respect bcg.cacheDir setting
+  const config = vscode.workspace.getConfiguration('bcg');
+  const cacheDirSetting = config.get<string>('cacheDir');
+  const cacheDir = cacheDirSetting
+    ? path.isAbsolute(cacheDirSetting)
+      ? cacheDirSetting
+      : path.join(workspaceRoot, cacheDirSetting)
+    : path.join(workspaceRoot, '.context-graph-cache');
+
   engine = new ContextGraphEngine({ workspaceRoot, cacheDir });
 
-  // Setup watsonx if configured
-  const apiKey = process.env.WATSONX_API_KEY ?? '';
-  const projectId = process.env.WATSONX_PROJECT_ID ?? '';
-  if (apiKey && projectId) {
-    const client = new WatsonxClient({ apiKey, projectId });
-    watsonxRuntime = new WatsonxRuntime(client);
+  // ── AI provider setup ─────────────────────────────────────────────────
+  watsonxRuntime = await initAiProvider(context.secrets, config);
+
+  if (engine && watsonxRuntime) {
     engine.setWatsonxClient(watsonxRuntime);
   }
 
@@ -79,15 +87,21 @@ export function activate(context: vscode.ExtensionContext) {
                 : `Change impact analysis complete. Check Impact Analysis panel.`;
               vscode.window.showInformationMessage(msg);
 
-              // Re-render graph with impact highlighting
+              // F19: Re-render graph with impact highlighting and push to webview
               if (lastAnalysisResult) {
                 const allImpacts = impactResults.flatMap(r => r.impacts);
                 const graphBuilder = engine!.getGraphBuilder();
                 const highlighted = graphBuilder.applyImpact(lastAnalysisResult.graph, allImpacts);
+                // F19: store the highlighted graph so the sidebar is consistent
+                lastAnalysisResult = { ...lastAnalysisResult, graph: highlighted };
                 GraphWebviewProvider.show(context.extensionUri, highlighted, impactResults[0] ?? null);
               }
             } else {
               vscode.window.showInformationMessage('No changes detected across all services.');
+              // F19: push a clean graph (no stale impact highlights)
+              if (lastAnalysisResult) {
+                GraphWebviewProvider.show(context.extensionUri, lastAnalysisResult.graph, null);
+              }
             }
           } catch (err) {
             vscode.window.showErrorMessage(`Change analysis failed: ${err}`);
@@ -99,18 +113,75 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('bcg.refreshContext', async () => {
       if (!engine) return;
       await runAnalysis(engine, systemOverviewProvider, serviceExplorerProvider, true);
+      // F19: push fresh graph to webview after refresh
+      if (lastAnalysisResult) {
+        GraphWebviewProvider.show(context.extensionUri, lastAnalysisResult.graph, null);
+      }
     }),
 
     vscode.commands.registerCommand('bcg.refreshAll', async () => {
       if (!engine) return;
       await runAnalysis(engine, systemOverviewProvider, serviceExplorerProvider, true);
+      // F19: push fresh graph to webview after refresh
+      if (lastAnalysisResult) {
+        GraphWebviewProvider.show(context.extensionUri, lastAnalysisResult.graph, null);
+      }
+    }),
+
+    // ── AI provider configuration command ─────────────────────────────
+    vscode.commands.registerCommand('bcg.configureAI', async () => {
+      const runtime = await runAiSetup(context.secrets);
+      watsonxRuntime = runtime;
+      if (engine) {
+        if (runtime) {
+          engine.setWatsonxClient(runtime);
+        }
+      }
     })
   );
 
   // ── Initial analysis on activation ────────────────────────────────────
-  runAnalysis(engine, systemOverviewProvider, serviceExplorerProvider).catch(console.error);
+  runAnalysis(engine, systemOverviewProvider, serviceExplorerProvider)
+    .then(() => { analysisCompleted = true; })
+    .catch(console.error);
+}
 
-  console.log('[BCG] Extension activated');
+/**
+ * Determine which AI provider to use on this activation.
+ *
+ * Flow:
+ *  1. Check if there is already a persisted choice (aiProvider config key).
+ *  2. If yes  → silently restore it.
+ *  3. If none → show the setup wizard so the user can choose.
+ *
+ * Environment-variable overrides (WATSONX_API_KEY + WATSONX_PROJECT_ID) are
+ * still honoured and bypass the wizard entirely — useful for CI / MCP server.
+ */
+async function initAiProvider(
+  secrets: vscode.SecretStorage,
+  config: vscode.WorkspaceConfiguration
+): Promise<WatsonxRuntime | null> {
+  // Legacy env-var / settings override — kept for backward compatibility
+  const apiKey = process.env.WATSONX_API_KEY ?? config.get<string>('watsonxApiKey') ?? '';
+  const projectId = process.env.WATSONX_PROJECT_ID ?? config.get<string>('watsonxProjectId') ?? '';
+
+  if (apiKey && projectId) {
+    const { WatsonxClient } = await import('@bob-context-graph/watsonx');
+    const baseUrl = process.env.WATSONX_BASE_URL ?? config.get<string>('watsonxBaseUrl') ?? 'https://us-south.ml.cloud.ibm.com';
+    const modelId = process.env.WATSONX_MODEL_ID ?? config.get<string>('watsonxModelId') ?? 'ibm/granite-3-8b-instruct';
+    const client = new WatsonxClient({ apiKey, projectId, baseUrl, modelId });
+    return new WatsonxRuntime(client);
+  }
+
+  const stored = getStoredProvider(config);
+
+  if (stored !== 'none') {
+    // Already chose a provider — restore silently
+    return restoreAiProvider(secrets, stored);
+  }
+
+  // First run — show the wizard
+  return runAiSetup(secrets);
 }
 
 async function runAnalysis(
@@ -119,6 +190,9 @@ async function runAnalysis(
   serviceProvider: ServiceExplorerProvider,
   forceRefresh = false
 ) {
+  // F21: Set analyzing state before starting
+  systemProvider.setAnalyzing(true);
+
   await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Window,
@@ -132,6 +206,7 @@ async function runAnalysis(
         serviceProvider.setServices(result.services);
       } catch (err) {
         vscode.window.showErrorMessage(`Bob Context Graph analysis failed: ${err}`);
+        systemProvider.setError(String(err));
       }
     }
   );
@@ -153,8 +228,7 @@ async function analyzeAllChanges(
     if (watsonxRuntime) {
       report = await watsonxRuntime.analyzeImpact(changeSet, svc, relatedServices);
     } else {
-      const { WatsonxRuntime: WR } = await import('@bob-context-graph/watsonx');
-      const { WatsonxClient: WC } = await import('@bob-context-graph/watsonx');
+      const { WatsonxRuntime: WR, WatsonxClient: WC } = await import('@bob-context-graph/watsonx');
       const mockClient = new WC({ apiKey: '', projectId: '' });
       const runtime = new WR(mockClient);
       report = await runtime.analyzeImpact(changeSet, svc, relatedServices);
@@ -176,5 +250,5 @@ function getWorkspaceRoot(): string | undefined {
 }
 
 export function deactivate() {
-  console.log('[BCG] Extension deactivated');
+  // no-op
 }

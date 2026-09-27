@@ -1,7 +1,7 @@
 ---
 name: context-graph
 description: Bob Context Graph — Persistent, commit-aware system intelligence for microservice architectures
-version: 1.0.0
+version: 1.1.0
 triggers:
   - architecture
   - microservice
@@ -24,7 +24,20 @@ triggers:
 
 Bob Context Graph provides IBM Bob with **persistent, commit-aware system intelligence** about a microservice workspace. Instead of repeatedly scanning every repository for architecture questions, Bob should query the Context Graph first and use cached, structured system knowledge.
 
-> Bob shouldn't rediscover your system every time you ask a question.
+> Bob shouldn't rediscover your system every time you ask a question — and you don't need to commit your changes for Bob to notice them.
+
+### How the cache works
+
+The cache uses a **compound key**: `serviceId + branch + commitHash + dirtyHash`
+
+| Key component | What it tracks |
+|---|---|
+| `commitHash` | The last committed git HEAD (unchanged = no new commits) |
+| `dirtyHash` | A fingerprint of the working tree (`git status --porcelain`). Changes the moment you edit a file, no commit required. |
+
+Additionally, a **workspace fingerprint** (hash of `pom.xml`, `package.json`, `go.mod` … sizes) is stored so the full filesystem discovery crawl is skipped on every subsequent request when no new services have been added or removed.
+
+**Result:** On a typical request where code is unchanged, Bob reads one JSON file per service from disk and returns immediately — no git calls, no source scanning.
 
 ## When to use this skill
 
@@ -133,7 +146,18 @@ Use sparingly — prefer cached context. Only call `refresh_context` if the deve
 
 ## Cache Preference
 
-**Always prefer cached context.** The Context Graph is designed to avoid redundant work. If the cache shows the service as "Cached" at the current commit, the context is reliable — do not rescan the repository.
+**Always prefer cached context.** The Context Graph is designed to avoid redundant work.
+
+The cache is automatically invalidated when:
+- The git HEAD advances (a new commit is made)
+- The working-tree dirty-hash changes (even a single unsaved edit triggers re-analysis)
+- A new service is added or removed (workspace fingerprint mismatch)
+
+The service status field tells you what happened:
+- `Cached` — exact hit on commitHash + dirtyHash; context is from disk, zero re-analysis
+- `Changed` — incremental re-analysis ran (only affected sections re-parsed)
+- `Indexed` — full analysis ran (first time or after cache invalidation)
+- `Error` — analysis failed
 
 Only call `refresh_context` if:
 - The developer explicitly asks for fresh analysis

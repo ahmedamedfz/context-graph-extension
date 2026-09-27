@@ -1,13 +1,14 @@
 import { ServiceContext, ImpactReport, ImpactEntry, ChangeSet } from '@bob-context-graph/core';
-import { WatsonxClient } from './client/WatsonxClient';
+import { LlmClient } from './client/LlmClient';
 
 /**
- * High-level watsonx-powered reasoning operations for Bob Context Graph.
+ * High-level reasoning operations for Bob Context Graph.
+ * Accepts any LlmClient implementation (watsonx.ai or local Granite).
  */
 export class WatsonxRuntime {
-  private client: WatsonxClient;
+  private client: LlmClient;
 
-  constructor(client: WatsonxClient) {
+  constructor(client: LlmClient) {
     this.client = client;
   }
 
@@ -186,32 +187,100 @@ Respond with JSON:
     changeDescription: string
   ): ImpactReport {
     const impacts: ImpactEntry[] = [];
+    const allServices = [changedService, ...relatedServices];
 
-    // Find services that depend on the changed service
-    for (const svc of relatedServices) {
-      const dependsOnChanged = svc.dependencies.some(
-        d =>
-          d.targetService === changedService.identity.serviceId ||
-          d.targetService.includes(changedService.identity.name.replace('-service', ''))
-      );
+    // F14: BFS over reverse-dependency graph to find direct and transitive consumers
+    const directConsumers = new Set<string>();
+    const transitiveConsumers = new Set<string>();
 
-      if (dependsOnChanged) {
-        impacts.push({
-          component: svc.identity.name,
-          componentType: 'SERVICE',
-          severity: changeSet.affectsDatabase ? 'HIGH' : 'MEDIUM',
-          reason: `${svc.identity.name} depends on ${changedService.identity.name} and may be affected by ${
-            changeSet.affectsDatabase ? 'database schema changes' : 'API changes'
-          }.`,
-          recommendedAction: `Review integration contracts with ${changedService.identity.name}.`,
-        });
+    // Build forward adjacency list: who does each service depend on?
+    const dependsOn = new Map<string, Set<string>>();
+    for (const svc of allServices) {
+      const targets = new Set<string>();
+      for (const dep of svc.dependencies) {
+        if (dep.type === 'REST') {
+          targets.add(dep.targetService);
+        }
       }
+      dependsOn.set(svc.identity.serviceId, targets);
+    }
+
+    // BFS: starting from changedService, find all services reachable in reverse
+    const changedId = changedService.identity.serviceId;
+    const changedName = changedService.identity.name;
+
+    // Layer 1: direct consumers (services that directly call the changed service)
+    for (const svc of relatedServices) {
+      const deps = dependsOn.get(svc.identity.serviceId) ?? new Set();
+      const dependsDirectly = [...deps].some(
+        target =>
+          target === changedId ||
+          target === changedName ||
+          target.includes(changedName.replace('-service', ''))
+      );
+      if (dependsDirectly) {
+        directConsumers.add(svc.identity.serviceId);
+      }
+    }
+
+    // BFS layers: transitive consumers
+    const visited = new Set<string>([changedId, ...directConsumers]);
+    const queue = [...directConsumers];
+    const MAX_DEPTH = 5;
+    let depth = 0;
+    while (queue.length > 0 && depth < MAX_DEPTH) {
+      const layerSize = queue.length;
+      for (let i = 0; i < layerSize; i++) {
+        const current = queue.shift()!;
+        for (const svc of relatedServices) {
+          if (visited.has(svc.identity.serviceId)) continue;
+          const deps = dependsOn.get(svc.identity.serviceId) ?? new Set();
+          const reachable = [...deps].some(
+            target =>
+              target === current ||
+              relatedServices.find(s => s.identity.serviceId === current)?.identity.name
+                .replace('-service', '') === target.replace('-service', '')
+          );
+          if (reachable) {
+            transitiveConsumers.add(svc.identity.serviceId);
+            visited.add(svc.identity.serviceId);
+            queue.push(svc.identity.serviceId);
+          }
+        }
+      }
+      depth++;
+    }
+
+    // Emit direct consumer impacts
+    for (const svcId of directConsumers) {
+      const svc = relatedServices.find(s => s.identity.serviceId === svcId)!;
+      impacts.push({
+        component: svc.identity.name,
+        componentType: 'SERVICE',
+        severity: changeSet.affectsDatabase ? 'HIGH' : 'MEDIUM',
+        reason: `${svc.identity.name} directly calls ${changedName} and is affected by ${
+          changeSet.affectsDatabase ? 'database schema changes' : 'API changes'
+        }.`,
+        recommendedAction: `Review integration contracts with ${changedName}.`,
+      });
+    }
+
+    // Emit transitive consumer impacts (lower severity — potential, not proven)
+    for (const svcId of transitiveConsumers) {
+      const svc = relatedServices.find(s => s.identity.serviceId === svcId)!;
+      impacts.push({
+        component: svc.identity.name,
+        componentType: 'SERVICE',
+        severity: 'LOW',
+        reason: `${svc.identity.name} is a transitive consumer of ${changedName} (indirect dependency). Impact is potential.`,
+        recommendedAction: `Monitor for indirect failures; verify integration chain.`,
+      });
     }
 
     // Add API impact if APIs changed
     if (changeSet.affectsApi) {
       impacts.push({
-        component: `${changedService.identity.name} API`,
+        component: `${changedName} API`,
         componentType: 'API',
         severity: 'MEDIUM',
         reason: 'REST API contract may have changed, affecting consumers.',
@@ -222,7 +291,7 @@ Respond with JSON:
     // Add database impact
     if (changeSet.affectsDatabase) {
       impacts.push({
-        component: `${changedService.identity.name} Database`,
+        component: `${changedName} Database`,
         componentType: 'DATABASE',
         severity: 'HIGH',
         reason: 'Database schema changes require migration scripts and may break existing queries.',
@@ -240,7 +309,7 @@ Respond with JSON:
         [changeSet.affectsApi && 'API', changeSet.affectsDatabase && 'DB schema', changeSet.affectsDependencies && 'dependencies']
           .filter(Boolean)
           .join(', ')
-      }.`,
+      }. Direct consumers: ${directConsumers.size}, transitive: ${transitiveConsumers.size}.`,
     };
   }
 

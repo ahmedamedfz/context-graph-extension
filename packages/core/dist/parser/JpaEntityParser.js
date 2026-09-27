@@ -38,6 +38,11 @@ const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 /**
  * Parses Spring/JPA entity classes to extract database schema information.
+ *
+ * F16 fixes:
+ * - Bind @Id/@Column/@Transient to the *exact next* field declaration, not a 3-line window
+ * - Prevent annotation bleed from one field to an unrelated adjacent field
+ * - Respect @Transient correctly
  */
 class JpaEntityParser {
     /**
@@ -68,7 +73,7 @@ class JpaEntityParser {
         const className = path.basename(filePath, '.java');
         // Determine table name
         const tableName = this.extractTableName(content, className);
-        // Extract columns
+        // Extract columns using the annotation-aware parser
         const columns = this.extractColumns(content);
         // Extract relationships
         const relationships = this.extractRelationships(content, className);
@@ -90,30 +95,83 @@ class JpaEntityParser {
             .toLowerCase()
             .replace(/^_/, '');
     }
+    /**
+     * F16: Walk through the class body line-by-line, accumulating annotations
+     * into a "pending" set and attaching them to the VERY NEXT field declaration.
+     * This prevents annotation bleed from one field to the next.
+     */
     extractColumns(content) {
         const columns = [];
         const lines = content.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            // Look for field declarations with @Column or @Id
-            const hasId = lines.slice(Math.max(0, i - 3), i + 1).some(l => /@Id/.test(l));
-            const columnAnnotation = lines
-                .slice(Math.max(0, i - 3), i + 1)
-                .find(l => /@Column/.test(l));
-            // Parse field line: e.g. private UUID id; or private Integer customerId;
-            const fieldMatch = line.match(/(?:private|protected|public)\s+([\w<>]+(?:\[\])?)\s+(\w+)\s*(?:=.*)?;/);
-            if (!fieldMatch)
+        // Pending annotation state for the current block
+        let pendingId = false;
+        let pendingTransient = false;
+        let pendingColumn = null;
+        let pendingRelationship = false;
+        for (const rawLine of lines) {
+            const line = rawLine.trim();
+            // Detect annotations — reset pending state for each NEW annotation block
+            // (we treat consecutive annotation lines as one block)
+            if (line.startsWith('@')) {
+                if (/@Id\b/.test(line)) {
+                    pendingId = true;
+                }
+                if (/@Transient\b/.test(line)) {
+                    pendingTransient = true;
+                }
+                if (/@Column\b/.test(line)) {
+                    pendingColumn = line;
+                }
+                if (/@ManyToOne|@OneToMany|@ManyToMany|@OneToOne/.test(line)) {
+                    pendingRelationship = true;
+                }
+                // Keep scanning — next non-annotation, non-blank line is the field
                 continue;
+            }
+            // Blank lines or method/class declarations reset the pending block
+            if (line.length === 0 || line.startsWith('public class') || line.startsWith('private class')) {
+                pendingId = false;
+                pendingTransient = false;
+                pendingColumn = null;
+                pendingRelationship = false;
+                continue;
+            }
+            // Try to match a field declaration
+            const fieldMatch = line.match(/(?:private|protected|public)\s+([\w<>[\]]+)\s+(\w+)\s*(?:=.*)?;/);
+            if (!fieldMatch) {
+                // This line is not a field declaration — if it looks like a method, reset pending
+                if (/(?:public|private|protected)\s+\w+\s+\w+\s*\(/.test(line)) {
+                    pendingId = false;
+                    pendingTransient = false;
+                    pendingColumn = null;
+                    pendingRelationship = false;
+                }
+                continue;
+            }
             const [, javaType, fieldName] = fieldMatch;
-            // Skip non-column fields (relationships are handled separately)
-            if (/@ManyToOne|@OneToMany|@ManyToMany|@OneToOne/.test(lines.slice(Math.max(0, i - 3), i + 1).join(' '))) {
+            // Capture current pending state and reset it immediately
+            const isId = pendingId;
+            const isTransient = pendingTransient;
+            const columnAnnotation = pendingColumn;
+            const isRelationship = pendingRelationship;
+            // Reset for next field
+            pendingId = false;
+            pendingTransient = false;
+            pendingColumn = null;
+            pendingRelationship = false;
+            // F16: Skip @Transient fields
+            if (isTransient)
+                continue;
+            // Skip relationship fields — handled separately
+            if (isRelationship)
+                continue;
+            // Skip collection types that aren't direct columns
+            if (javaType.startsWith('List') ||
+                javaType.startsWith('Set') ||
+                javaType.startsWith('Collection')) {
                 continue;
             }
-            // Skip collections that aren't direct columns
-            if (javaType.startsWith('List') || javaType.startsWith('Set') || javaType.startsWith('Collection')) {
-                continue;
-            }
-            const isPrimaryKey = hasId || fieldName === 'id';
+            const isPrimaryKey = isId || fieldName === 'id';
             const columnName = this.extractColumnName(columnAnnotation, fieldName);
             const sqlType = this.javaTypeToSql(javaType);
             const isNullable = !isPrimaryKey && !(columnAnnotation && /nullable\s*=\s*false/.test(columnAnnotation));
@@ -167,19 +225,21 @@ class JpaEntityParser {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
             let relType = null;
-            if (/@ManyToOne/.test(line))
+            if (/@ManyToOne\b/.test(line))
                 relType = 'ManyToOne';
-            else if (/@OneToMany/.test(line))
+            else if (/@OneToMany\b/.test(line))
                 relType = 'OneToMany';
-            else if (/@ManyToMany/.test(line))
+            else if (/@ManyToMany\b/.test(line))
                 relType = 'ManyToMany';
-            else if (/@OneToOne/.test(line))
+            else if (/@OneToOne\b/.test(line))
                 relType = 'OneToOne';
             if (!relType)
                 continue;
-            // Look at the next few lines for the field declaration
-            for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+            // Look at the next non-annotation, non-blank lines for the field declaration
+            for (let j = i + 1; j < Math.min(i + 8, lines.length); j++) {
                 const fieldLine = lines[j].trim();
+                if (fieldLine.startsWith('@') || fieldLine.length === 0)
+                    continue;
                 const fieldMatch = fieldLine.match(/(?:private|protected|public)\s+(?:List|Set|Collection)?<?(\w+)>?\s+(\w+)\s*[;=]/);
                 if (fieldMatch) {
                     relationships.push({
@@ -190,17 +250,21 @@ class JpaEntityParser {
                     });
                     break;
                 }
+                // Stop at a method declaration
+                if (/(?:public|private|protected)\s+\w+\s+\w+\s*\(/.test(fieldLine))
+                    break;
             }
         }
         return relationships;
     }
     findJavaFiles(dir) {
         const results = [];
+        const SKIP = new Set(['target', '.git', 'node_modules', 'test', 'build', 'dist']);
         try {
             const walk = (current) => {
                 const entries = fs.readdirSync(current, { withFileTypes: true });
                 for (const entry of entries) {
-                    if (['target', '.git', 'node_modules', 'test'].includes(entry.name))
+                    if (SKIP.has(entry.name))
                         continue;
                     const full = path.join(current, entry.name);
                     if (entry.isDirectory()) {

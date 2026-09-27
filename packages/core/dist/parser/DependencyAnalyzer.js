@@ -150,9 +150,11 @@ class DependencyAnalyzer {
      */
     detectDatabaseUsage(serviceRoot) {
         const databases = [];
+        // F08: also check application.yaml (same as .yml but different extension)
         const configFiles = [
             path.join(serviceRoot, 'src', 'main', 'resources', 'application.properties'),
             path.join(serviceRoot, 'src', 'main', 'resources', 'application.yml'),
+            path.join(serviceRoot, 'src', 'main', 'resources', 'application.yaml'),
         ];
         for (const configFile of configFiles) {
             if (!fs.existsSync(configFile))

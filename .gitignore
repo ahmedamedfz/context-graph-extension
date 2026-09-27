@@ -1,1 +1,7 @@
-\node_modules\
+node_modules/
+dist/
+*.vsix
+.env
+.context-graph-cache/
+*.js.map
+

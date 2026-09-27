@@ -69,11 +69,68 @@ else {
 }
 // ── In-memory state ───────────────────────────────────────────────────────
 let cachedResult = null;
+let lastRepoFingerprints = new Map();
+/**
+ * F04 + dirty: Check per-repo HEAD + dirty-state fingerprint before returning cachedResult.
+ * If any repo's HEAD has advanced OR the dirty-tree hash has changed, re-analyze.
+ * This means uncommitted edits are always detected without requiring a commit.
+ */
 async function getOrAnalyze(force = false) {
     if (!cachedResult || force) {
         cachedResult = await engine.analyze(force);
+        lastRepoFingerprints = await captureRepoFingerprints(cachedResult);
+        return cachedResult;
+    }
+    // Cheap freshness check: compare HEAD + dirtyHash for each unique repo
+    const { GitAnalyzer } = await Promise.resolve().then(() => __importStar(require('@bob-context-graph/core')));
+    let stale = false;
+    const seenRepos = new Set();
+    for (const svc of cachedResult.services) {
+        const repo = svc.identity.repository;
+        if (seenRepos.has(repo))
+            continue;
+        seenRepos.add(repo);
+        try {
+            const git = new GitAnalyzer(repo);
+            const currentHead = git.getHead(false);
+            const currentDirty = git.getDirtyHash();
+            const prev = lastRepoFingerprints.get(repo);
+            if (!prev) {
+                stale = true;
+                break;
+            }
+            if ((currentHead !== 'unknown' && currentHead !== prev.head) ||
+                currentDirty !== prev.dirty) {
+                stale = true;
+                break;
+            }
+        }
+        catch {
+            // git not available — keep cached
+        }
+    }
+    if (stale) {
+        cachedResult = await engine.analyze(false);
+        lastRepoFingerprints = await captureRepoFingerprints(cachedResult);
     }
     return cachedResult;
+}
+async function captureRepoFingerprints(result) {
+    const { GitAnalyzer } = await Promise.resolve().then(() => __importStar(require('@bob-context-graph/core')));
+    const map = new Map();
+    for (const svc of result.services) {
+        const repo = svc.identity.repository;
+        if (map.has(repo))
+            continue;
+        try {
+            const git = new GitAnalyzer(repo);
+            map.set(repo, { head: git.getHead(false), dirty: git.getDirtyHash() });
+        }
+        catch {
+            map.set(repo, { head: svc.identity.commitHash, dirty: 'clean' });
+        }
+    }
+    return map;
 }
 // ── MCP Server ────────────────────────────────────────────────────────────
 const server = new index_js_1.Server({ name: 'bob-context-graph', version: '0.1.0' }, { capabilities: { tools: {} } });
@@ -198,14 +255,7 @@ async function handleGetSystemContext() {
 }
 async function handleGetServiceContext(serviceArg) {
     const result = await getOrAnalyze();
-    const svc = result.services.find(s => s.identity.serviceId === serviceArg ||
-        s.identity.name === serviceArg ||
-        s.identity.serviceId.includes(serviceArg) ||
-        serviceArg.includes(s.identity.serviceId));
-    if (!svc) {
-        const available = result.services.map(s => s.identity.serviceId).join(', ');
-        throw new types_js_1.McpError(types_js_1.ErrorCode.InvalidParams, `Service "${serviceArg}" not found. Available services: ${available}`);
-    }
+    const svc = resolveService(serviceArg, result.services);
     const detail = {
         identity: {
             serviceId: svc.identity.serviceId,
@@ -250,13 +300,7 @@ async function handleGetServiceContext(serviceArg) {
 }
 async function handleAnalyzeChange(serviceArg) {
     const result = await getOrAnalyze();
-    const svc = result.services.find(s => s.identity.serviceId === serviceArg ||
-        s.identity.name === serviceArg ||
-        s.identity.serviceId.includes(serviceArg) ||
-        serviceArg.includes(s.identity.serviceId));
-    if (!svc) {
-        throw new types_js_1.McpError(types_js_1.ErrorCode.InvalidParams, `Service "${serviceArg}" not found.`);
-    }
+    const svc = resolveService(serviceArg, result.services);
     // Detect current HEAD and compare with cached
     const git = new core_1.GitAnalyzer(svc.identity.rootPath);
     const currentCommit = git.getHead(false);
@@ -338,23 +382,18 @@ async function handleAnalyzeChange(serviceArg) {
 }
 async function handleRefreshContext(serviceArg) {
     if (serviceArg) {
-        // Refresh specific service
+        // F05: targeted refresh — only re-analyze the specific service
         const result = await getOrAnalyze();
-        const discovered = result.services.find(s => s.identity.serviceId === serviceArg ||
-            s.identity.name === serviceArg ||
-            s.identity.serviceId.includes(serviceArg));
-        if (!discovered) {
-            throw new types_js_1.McpError(types_js_1.ErrorCode.InvalidParams, `Service "${serviceArg}" not found.`);
-        }
-        engine.getCache().invalidate(discovered.identity.serviceId);
-        cachedResult = null;
-        const fresh = await getOrAnalyze(true);
+        const target = resolveService(serviceArg, result.services);
+        // Use the engine's targeted refresh method
+        const fresh = await engine.refreshService(target.identity.serviceId);
+        cachedResult = fresh;
         return {
             content: [
                 {
                     type: 'text',
                     text: JSON.stringify({
-                        message: `Refreshed context for ${serviceArg}`,
+                        message: `Refreshed context for ${target.identity.serviceId}`,
                         stats: fresh.cacheStats,
                     }),
                 },
@@ -380,6 +419,31 @@ async function handleRefreshContext(serviceArg) {
             },
         ],
     };
+}
+/**
+ * F23: Strict service resolver — reject ambiguous short names.
+ * Returns the matched service or throws McpError with candidate list.
+ */
+function resolveService(serviceArg, services) {
+    // 1. Exact canonical ID match
+    const exactId = services.find(s => s.identity.serviceId === serviceArg);
+    if (exactId)
+        return exactId;
+    // 2. Exact name match
+    const exactName = services.find(s => s.identity.name === serviceArg);
+    if (exactName)
+        return exactName;
+    // 3. Unique prefix/substring match — only if unambiguous
+    const partialMatches = services.filter(s => s.identity.serviceId.includes(serviceArg) ||
+        s.identity.name.includes(serviceArg));
+    if (partialMatches.length === 1)
+        return partialMatches[0];
+    if (partialMatches.length > 1) {
+        const candidates = partialMatches.map(s => s.identity.serviceId).join(', ');
+        throw new types_js_1.McpError(types_js_1.ErrorCode.InvalidParams, `Ambiguous service name "${serviceArg}". Matching candidates: [${candidates}]. Please use an exact service ID.`);
+    }
+    const available = services.map(s => s.identity.serviceId).join(', ');
+    throw new types_js_1.McpError(types_js_1.ErrorCode.InvalidParams, `Service "${serviceArg}" not found. Available: [${available}]`);
 }
 // ── Start ────────────────────────────────────────────────────────────────
 async function main() {
