@@ -38,6 +38,7 @@ export declare class ContextGraphEngine {
     private cache;
     private graphBuilder;
     private cacheDir;
+    private pending;
     private watsonxClient;
     constructor(options: AnalysisOptions);
     setWatsonxClient(client: any): void;
@@ -50,6 +51,7 @@ export declare class ContextGraphEngine {
      *      without needing a commit.
      */
     analyze(forceRefresh?: boolean): Promise<AnalysisResult>;
+    private analyzeOnce;
     /**
      * Discover services, using the workspace-fingerprint cache when available.
      *
@@ -74,7 +76,6 @@ export declare class ContextGraphEngine {
     /**
      * Scan cache directory for any file belonging to this serviceId at the given commit.
      */
-    private findCachedContextByServiceId;
     /**
      * Analyze a single service, using cache when possible.
      *
@@ -111,8 +112,13 @@ export declare class ContextGraphEngine {
     /**
      * Refresh a single specific service without re-analyzing others.
      * F05: targeted refresh — only invalidates and re-parses the target service.
+     *
+     * The comparison baseline (baselineCommit) is preserved across the refresh so
+     * that detectAndAnalyzeChanges / MCP analyze_change can still find the meaningful
+     * "before" snapshot after a targeted refresh.
      */
     refreshService(serviceId: string): Promise<AnalysisResult>;
+    private refreshServiceOnce;
     getCache(): ContextCache;
     getGraphBuilder(): ContextGraphBuilder;
     /**
@@ -125,6 +131,7 @@ export declare class ContextGraphEngine {
      * If a Map is provided, it will be updated in-place; otherwise the array is modified.
      */
     private mergeDatabaseDependencies;
+    private describeApis;
     private makeErrorContext;
 }
 //# sourceMappingURL=ContextGraphEngine.d.ts.map

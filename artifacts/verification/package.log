@@ -1,0 +1,49 @@
+
+> bob-context-graph@0.1.0 build:vsix
+> npm run build && npm run package --workspace=packages/vscode-extension
+
+
+> bob-context-graph@0.1.0 build
+> npm run build --workspaces --if-present
+
+
+> @bob-context-graph/core@0.1.0 build
+> tsc
+
+
+> @bob-context-graph/watsonx@0.1.0 build
+> tsc
+
+
+> @bob-context-graph/mcp-server@0.1.0 build
+> tsc
+
+
+> bob-context-graph@0.2.0 build
+> tsc && node esbuild.js
+
+
+> bob-context-graph@0.2.0 package
+> node ../../scripts/package-offline.cjs
+
+Downloading https://github.com/ggml-org/llama.cpp/releases/download/b11206/llama-b11206-bin-macos-arm64.tar.gz
+Granite offline bundle ready: /Users/ahmadfariz/Projects/github/context-graph-extension/packages/vscode-extension/resources/granite
+ INFO  Files included in the VSIX:
+base.vsix
+├─ [Content_Types].xml 
+├─ extension.vsixmanifest 
+└─ extension/
+   ├─ LICENSE.txt [1.06 KB]
+   ├─ THIRD_PARTY_NOTICES.md [1.05 KB]
+   ├─ package.json [4.6 KB]
+   ├─ readme.md [2.48 KB]
+   ├─ dist/
+   │  └─ extension.js [983.98 KB]
+   └─ resources/
+      ├─ activity-icon.svg [0.48 KB]
+      └─ icon.png [1.94 KB]
+
+The file extension/dist/extension.js is large (983.98 KB)
+
+ DONE  Packaged: /var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-vsix-XoTLMR/base.vsix (9 files, 191.35 KB)
+Offline VSIX ready: /Users/ahmadfariz/Projects/github/context-graph-extension/packages/vscode-extension/bob-context-graph-0.2.0-darwin-arm64.vsix

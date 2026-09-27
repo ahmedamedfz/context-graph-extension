@@ -35,36 +35,69 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GraphWebviewProvider = void 0;
 const vscode = __importStar(require("vscode"));
+const crypto = __importStar(require("crypto"));
 const graphHtml_1 = require("./graphHtml");
 class GraphWebviewProvider {
+    static update(graph, impactReport) {
+        this.currentPanel?.webview.postMessage({ type: 'update', graph: graphToVisualization(graph), impactReport });
+    }
+    /**
+     * Show or update the graph webview.
+     * F22: nonce is generated per show() call for CSP.
+     * F19: always sends updated data via postMessage so the graph follows refresh.
+     */
     static show(extensionUri, graph, impactReport) {
         const column = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
+        const vizData = graphToVisualization(graph);
         if (GraphWebviewProvider.currentPanel) {
+            // F19: update existing panel — sends new data so it always follows refresh
             GraphWebviewProvider.currentPanel.reveal(column);
             GraphWebviewProvider.currentPanel.webview.postMessage({
                 type: 'update',
-                graph: graphToVisualization(graph),
+                graph: vizData,
                 impactReport,
             });
             return;
         }
+        // Generate a nonce for this panel's CSP
+        const nonce = crypto.randomBytes(16).toString('base64');
         const panel = vscode.window.createWebviewPanel('bcg.graph', 'Bob Context Graph', column ?? vscode.ViewColumn.One, {
             enableScripts: true,
+            localResourceRoots: [],
             retainContextWhenHidden: true,
         });
         GraphWebviewProvider.currentPanel = panel;
-        panel.webview.html = (0, graphHtml_1.getGraphHtml)(graphToVisualization(graph), impactReport);
+        // F22: pass nonce so the HTML's CSP script-src matches the script tag's nonce
+        panel.webview.html = (0, graphHtml_1.getGraphHtml)(vizData, impactReport, nonce);
         panel.onDidDispose(() => {
             GraphWebviewProvider.currentPanel = undefined;
         });
-        panel.webview.onDidReceiveMessage(msg => {
-            if (msg.type === 'nodeSelected') {
-                // Handle node click — could show details in status bar or sidebar
-                console.log('[BCG] Node selected:', msg.nodeId);
+        // Send initial data via postMessage once the webview is ready
+        // (a short delay ensures the webview's message listener is registered)
+        setTimeout(() => {
+            panel.webview.postMessage({
+                type: 'update',
+                graph: vizData,
+                impactReport,
+            });
+        }, 200);
+        // F18: dispatch webview messages to the appropriate VS Code command
+        panel.webview.onDidReceiveMessage(async (msg) => {
+            switch (msg.type) {
+                case 'nodeSelected':
+                    // Node click — no-op for now
+                    break;
+                case 'analyzeChanges':
+                    // F18: delegate to the same command used by the sidebar button
+                    await vscode.commands.executeCommand('bcg.analyzeChanges');
+                    break;
+                default:
+                    // Safely ignore unrecognized messages
+                    break;
             }
-        });
+        }, undefined, []);
     }
 }
 exports.GraphWebviewProvider = GraphWebviewProvider;
@@ -91,7 +124,7 @@ function graphToVisualization(graph) {
 function summarizeData(node) {
     if (node.type === 'DATABASE') {
         const db = node.data;
-        return { name: db.name, tableCount: db.tables?.length ?? 0, owner: db.ownerServiceId };
+        return { name: db.name, tableCount: db.tables?.length ?? 0, owner: db.ownerServiceId, tables: db.tables };
     }
     const svc = node.data;
     return {
@@ -104,6 +137,10 @@ function summarizeData(node) {
         status: svc?.status,
         analyzedAt: svc?.analyzedAt,
         semanticSummary: svc?.semanticSummary,
+        apis: svc?.apis ?? [],
+        tables: svc?.database ?? [],
+        dependencies: svc?.dependencies ?? [],
+        coverage: svc?.coverage,
     };
 }
 //# sourceMappingURL=GraphWebviewProvider.js.map

@@ -1,0 +1,105 @@
+[
+  {
+    "id": "F14",
+    "name": "Transitive consumers included, isolated excluded",
+    "status": "PASS",
+    "actual": [
+      {
+        "component": "B",
+        "componentType": "SERVICE",
+        "nodeId": "B",
+        "severity": "MEDIUM",
+        "reason": "B directly calls C and may be affected by API changes.",
+        "recommendedAction": "Review integration contracts with C."
+      },
+      {
+        "component": "A",
+        "componentType": "SERVICE",
+        "nodeId": "A",
+        "severity": "LOW",
+        "reason": "A is a transitive consumer of C (indirect dependency). Impact is potential.",
+        "recommendedAction": "Monitor for indirect failures; verify integration chain."
+      },
+      {
+        "component": "C API",
+        "nodeId": "C",
+        "componentType": "API",
+        "severity": "MEDIUM",
+        "reason": "REST API contract may have changed, affecting consumers.",
+        "recommendedAction": "Verify API backward compatibility or update version."
+      }
+    ]
+  },
+  {
+    "id": "F12",
+    "name": "Internal DB change does not blindly mark REST consumer HIGH",
+    "status": "PASS",
+    "actual": [
+      {
+        "component": "B",
+        "componentType": "SERVICE",
+        "nodeId": "B",
+        "severity": "LOW",
+        "reason": "B directly calls C and may be affected by database schema changes.",
+        "recommendedAction": "Review integration contracts with C."
+      },
+      {
+        "component": "A",
+        "componentType": "SERVICE",
+        "nodeId": "A",
+        "severity": "LOW",
+        "reason": "A is a transitive consumer of C (indirect dependency). Impact is potential.",
+        "recommendedAction": "Monitor for indirect failures; verify integration chain."
+      }
+    ]
+  },
+  {
+    "id": "F17-order",
+    "name": "Highest severity independent of impact order",
+    "status": "PASS",
+    "actual": {
+      "forward": "HIGH",
+      "reverse": "HIGH"
+    }
+  },
+  {
+    "id": "F17-target",
+    "name": "DB-only impact does not highlight service HIGH",
+    "status": "PASS",
+    "actual": [
+      [
+        "inventory-service",
+        "SAFE"
+      ],
+      [
+        "order-service",
+        "SAFE"
+      ],
+      [
+        "payment-service",
+        "SAFE"
+      ],
+      [
+        "db:inventory_db",
+        "SAFE"
+      ],
+      [
+        "db:orders_db",
+        "HIGH"
+      ],
+      [
+        "db:payment_db",
+        "SAFE"
+      ]
+    ]
+  },
+  {
+    "id": "F22-static",
+    "name": "CSP nonce and no injected script delimiter",
+    "status": "PASS",
+    "actual": {
+      "csp": true,
+      "inlineHandlers": false
+    }
+  }
+]

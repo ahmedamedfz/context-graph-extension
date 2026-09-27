@@ -383,7 +383,7 @@ export function getGraphHtml(
 
   function wrapText(text, maxLen) {
     if (!text) return [''];
-    const words = text.split(/[-_\s]+/);
+    const words = text.split(/[-_\\s]+/);
     const lines = [];
     let current = '';
     for (let i = 0; i < words.length; i++) {
@@ -470,6 +470,24 @@ export function getGraphHtml(
         body.appendChild(sumSec);
       }
     }
+    if (d.apis && d.apis.length) {
+      const list = document.createElement('details');
+      list.appendChild(safeText('summary', 'Endpoints (' + d.apis.length + ')'));
+      d.apis.forEach(function(api) {
+        list.appendChild(makeSection(api.method + ' ' + api.path, [
+          ['Request', api.requestModel || 'Unknown'], ['Response', api.responseModel || 'Unknown'],
+          ['Description', api.semanticDescription || 'Not generated']
+        ]));
+      });
+      body.appendChild(list);
+    }
+    (d.tables || []).forEach(function(table) {
+      const list = document.createElement('details');
+      list.appendChild(safeText('summary', table.tableName + ' (' + table.columns.length + ' columns)'));
+      list.appendChild(makeSection('Columns', table.columns.map(function(c) {return [c.name, c.type + (c.isPrimaryKey ? ' · primary key' : '')];})));
+      body.appendChild(list);
+    });
+    if (d.coverage) body.appendChild(safeText('div', 'Static analysis · schemas: ' + d.coverage.schemas + ' · events: ' + d.coverage.events, 'detail-empty'));
     content.appendChild(body);
   }
 
@@ -508,7 +526,7 @@ export function getGraphHtml(
 
     const title = document.createElement('div');
     title.className = 'impact-title';
-    title.textContent = 'BREAKING CHANGE'; // safe — not user data
+    title.textContent = 'CHANGE IMPACT'; // safe — not user data
     section.appendChild(title);
 
     const changeDesc = document.createElement('div');

@@ -11,11 +11,14 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
+    "test": "npm run build && npm run test --workspaces --if-present && node --test test/*.test.cjs && node test/acceptance.cjs",
     "dev:mcp": "npm run dev --workspace=packages/mcp-server",
-    "build:vsix": "npm run package --workspace=packages/vscode-extension"
+    "build:vsix": "npm run build && npm run package --workspace=packages/vscode-extension",
+    "prepare:granite": "node scripts/prepare-granite.cjs",
+    "test:granite": "node scripts/test-granite.cjs"
   },
   "devDependencies": {
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "yazl": "2.5.1"
   }
 }

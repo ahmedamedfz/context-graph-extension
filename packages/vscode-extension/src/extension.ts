@@ -14,7 +14,10 @@ let watsonxRuntime: WatsonxRuntime | null = null;
 let lastAnalysisResult: { services: ServiceContext[]; graph: SystemContextGraph } | null = null;
 
 // F19: track whether an initial analysis has completed (vs. is still in progress)
-let analysisCompleted = false;
+let aiTask: Promise<void> = Promise.resolve();
+let configuringAI = false;
+let disposed = false;
+let changesRunning = false;
 
 export async function activate(context: vscode.ExtensionContext) {
   // ── Setup engine ──────────────────────────────────────────────────────
@@ -35,12 +38,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
   engine = new ContextGraphEngine({ workspaceRoot, cacheDir });
 
-  // ── AI provider setup ─────────────────────────────────────────────────
-  watsonxRuntime = await initAiProvider(context.secrets, config);
-
-  if (engine && watsonxRuntime) {
-    engine.setWatsonxClient(watsonxRuntime);
-  }
+  disposed = false;
+  const bundleDir = path.join(context.extensionPath, 'resources', 'granite');
 
   // ── Register tree view providers ──────────────────────────────────────
   const systemOverviewProvider = new SystemOverviewProvider();
@@ -50,6 +49,23 @@ export async function activate(context: vscode.ExtensionContext) {
   vscode.window.registerTreeDataProvider('bcg.systemOverview', systemOverviewProvider);
   vscode.window.registerTreeDataProvider('bcg.serviceExplorer', serviceExplorerProvider);
   vscode.window.registerTreeDataProvider('bcg.impactPanel', impactPanelProvider);
+
+  const replaceAI = (factory: () => Promise<WatsonxRuntime | null | undefined>) => {
+    aiTask = aiTask.then(async () => {
+      if (disposed) return;
+      configuringAI = true;
+      try {
+        const runtime = await factory();
+        if (disposed) { runtime?.dispose(); return; }
+        if (runtime === undefined) return; // dismissed wizard keeps the active provider
+        watsonxRuntime?.dispose();
+        watsonxRuntime = runtime;
+        engine?.setWatsonxClient(runtime);
+        if (engine) await runAnalysis(engine, systemOverviewProvider, serviceExplorerProvider, true);
+      } finally { configuringAI = false; }
+    }).catch(err => { vscode.window.showWarningMessage(`AI setup failed: ${String(err)}`); });
+    return aiTask;
+  };
 
   // ── Register commands ──────────────────────────────────────────────────
   context.subscriptions.push(
@@ -67,9 +83,11 @@ export async function activate(context: vscode.ExtensionContext) {
     }),
 
     vscode.commands.registerCommand('bcg.analyzeChanges', async () => {
-      if (!engine || !lastAnalysisResult) {
-        await runAnalysis(engine!, systemOverviewProvider, serviceExplorerProvider);
-      }
+      if (changesRunning) return;
+      changesRunning = true;
+      try {
+      if (!engine) return;
+      await runAnalysis(engine, systemOverviewProvider, serviceExplorerProvider);
 
       if (!lastAnalysisResult) return;
 
@@ -108,6 +126,7 @@ export async function activate(context: vscode.ExtensionContext) {
           }
         }
       );
+      } finally { changesRunning = false; }
     }),
 
     vscode.commands.registerCommand('bcg.refreshContext', async () => {
@@ -129,21 +148,50 @@ export async function activate(context: vscode.ExtensionContext) {
     }),
 
     // ── AI provider configuration command ─────────────────────────────
-    vscode.commands.registerCommand('bcg.configureAI', async () => {
-      const runtime = await runAiSetup(context.secrets);
-      watsonxRuntime = runtime;
-      if (engine) {
-        if (runtime) {
-          engine.setWatsonxClient(runtime);
-        }
-      }
-    })
+    vscode.commands.registerCommand('bcg.configureAI', () => replaceAI(() => runAiSetup(context.secrets, bundleDir)))
   );
 
-  // ── Initial analysis on activation ────────────────────────────────────
-  runAnalysis(engine, systemOverviewProvider, serviceExplorerProvider)
-    .then(() => { analysisCompleted = true; })
-    .catch(console.error);
+  // Views and commands are registered before optional model loading or setup prompts.
+  await runAnalysis(engine, systemOverviewProvider, serviceExplorerProvider);
+  void replaceAI(() => initAiProvider(context.secrets, config, bundleDir));
+
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const refresh = () => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (engine) void runAnalysis(engine, systemOverviewProvider, serviceExplorerProvider);
+    }, 500);
+  };
+  let activeWatchers: vscode.Disposable[] = [];
+  const watch = (root: string, cache: string) => {
+    activeWatchers.forEach(w => w.dispose());
+    const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '**/*'));
+    const onSourceChange = (uri: vscode.Uri) => {
+      const rel = path.relative(cache, uri.fsPath);
+      if (rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel))) return;
+      if (/(?:^|[/\\])(?:node_modules|dist|target|build)(?:[/\\]|$)/.test(uri.fsPath)) return;
+      refresh();
+    };
+    const gitWatcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '**/.git/{HEAD,index,refs/**}'));
+    activeWatchers = [watcher, gitWatcher, watcher.onDidChange(onSourceChange), watcher.onDidCreate(onSourceChange), watcher.onDidDelete(onSourceChange), gitWatcher.onDidChange(refresh), gitWatcher.onDidCreate(refresh), gitWatcher.onDidDelete(refresh)];
+  };
+  watch(workspaceRoot, cacheDir);
+  context.subscriptions.push({dispose: () => {disposed = true; activeWatchers.forEach(w => w.dispose()); if (timer) clearTimeout(timer); watsonxRuntime?.dispose();}});
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async event => {
+    if (!configuringAI && ['aiProvider', 'watsonxBaseUrl', 'watsonxModelId'].some(key => event.affectsConfiguration('bcg.' + key))) {
+      await replaceAI(() => restoreAiProvider(context.secrets, getStoredProvider(vscode.workspace.getConfiguration('bcg')), bundleDir));
+    }
+    if (['workspaceRoot', 'cacheDir'].some(key => event.affectsConfiguration('bcg.' + key))) {
+      const root = getWorkspaceRoot();
+      if (root) {
+        const dir = vscode.workspace.getConfiguration('bcg').get<string>('cacheDir');
+        engine = new ContextGraphEngine({workspaceRoot: root, cacheDir: dir ? path.resolve(root, dir) : undefined});
+        engine.setWatsonxClient(watsonxRuntime);
+        watch(root, dir ? path.resolve(root, dir) : path.join(root, '.context-graph-cache'));
+        await runAnalysis(engine, systemOverviewProvider, serviceExplorerProvider);
+      }
+    }
+  }));
 }
 
 /**
@@ -159,7 +207,8 @@ export async function activate(context: vscode.ExtensionContext) {
  */
 async function initAiProvider(
   secrets: vscode.SecretStorage,
-  config: vscode.WorkspaceConfiguration
+  config: vscode.WorkspaceConfiguration,
+  bundleDir: string
 ): Promise<WatsonxRuntime | null> {
   // Legacy env-var / settings override — kept for backward compatibility
   const apiKey = process.env.WATSONX_API_KEY ?? config.get<string>('watsonxApiKey') ?? '';
@@ -175,13 +224,14 @@ async function initAiProvider(
 
   const stored = getStoredProvider(config);
 
-  if (stored !== 'none') {
+  const choice = config.inspect<string>('aiProvider');
+  if (stored !== 'none' || choice?.globalValue !== undefined || choice?.workspaceValue !== undefined) {
     // Already chose a provider — restore silently
-    return restoreAiProvider(secrets, stored);
+    return restoreAiProvider(secrets, stored, bundleDir);
   }
 
   // First run — show the wizard
-  return runAiSetup(secrets);
+  return (await runAiSetup(secrets, bundleDir)) ?? null;
 }
 
 async function runAnalysis(
@@ -201,9 +251,11 @@ async function runAnalysis(
     async () => {
       try {
         const result = await eng.analyze(forceRefresh);
+        if (disposed || eng !== engine) return;
         lastAnalysisResult = result;
         systemProvider.setData(result.services, result.cacheStats);
         serviceProvider.setServices(result.services);
+        GraphWebviewProvider.update(result.graph, null);
       } catch (err) {
         vscode.window.showErrorMessage(`Bob Context Graph analysis failed: ${err}`);
         systemProvider.setError(String(err));
@@ -250,5 +302,6 @@ function getWorkspaceRoot(): string | undefined {
 }
 
 export function deactivate() {
-  // no-op
+  disposed = true;
+  watsonxRuntime?.dispose();
 }

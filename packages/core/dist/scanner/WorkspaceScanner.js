@@ -49,7 +49,7 @@ const MAX_DEPTH = 5;
 const MARKER_FILES = [
     'pom.xml', 'build.gradle', 'build.gradle.kts',
     'package.json', 'requirements.txt', 'pyproject.toml',
-    'setup.py', 'setup.cfg', 'go.mod',
+    'setup.py', 'setup.cfg', 'go.mod', 'composer.json', 'Dockerfile', 'compose.yaml', 'compose.yml',
 ];
 /**
  * Discovers microservice directories within a workspace root.
@@ -87,7 +87,7 @@ class WorkspaceScanner {
         entries.sort();
         return crypto
             .createHash('sha1')
-            .update(entries.join('\n'))
+            .update(fs.realpathSync(this.workspaceRoot) + '\n' + entries.join('\n'))
             .digest('hex')
             .slice(0, 16);
     }
@@ -106,7 +106,7 @@ class WorkspaceScanner {
                 try {
                     const stat = fs.statSync(path.join(dir, entry.name));
                     const rel = path.relative(this.workspaceRoot, path.join(dir, entry.name)).replace(/\\/g, '/');
-                    out.push(`${rel}:${stat.size}`);
+                    out.push(`${rel}:${crypto.createHash('sha256').update(fs.readFileSync(path.join(dir, entry.name))).digest('hex')}`);
                 }
                 catch {
                     // ignore
@@ -191,6 +191,15 @@ class WorkspaceScanner {
         if (fs.existsSync(path.join(dir, 'go.mod'))) {
             return 'go';
         }
+        if (fs.existsSync(path.join(dir, 'composer.json')))
+            return 'php';
+        if (fs.existsSync(path.join(dir, 'Dockerfile'))) {
+            const files = fs.readdirSync(dir);
+            if (files.some(f => f.endsWith('.php')))
+                return 'php';
+            if (files.some(f => f.endsWith('.java')))
+                return 'java';
+        }
         return 'unknown';
     }
     /**
@@ -256,13 +265,22 @@ class WorkspaceScanner {
         catch {
             // Not a git repo or git not available
         }
-        const repository = gitRoot ?? dirPath;
+        // Resolve symlinks so that repository and rootPath share the same prefix,
+        // enabling correct path.relative() computation in the engine.
+        const resolveReal = (p) => { try {
+            return fs.realpathSync(p);
+        }
+        catch {
+            return p;
+        } };
+        const repository = resolveReal(gitRoot ?? dirPath);
+        const rootPath = resolveReal(dirPath);
         // F09 fix: canonical serviceId = namespace (repo name or workspace-relative path) + service dir name
         const serviceId = this.generateServiceId(dirPath, repository);
         return {
             serviceId,
             name,
-            rootPath: dirPath,
+            rootPath,
             repository,
             branch,
             commitHash,
@@ -272,19 +290,16 @@ class WorkspaceScanner {
     }
     /**
      * F09: Generate a canonical, unique service ID.
-     * Uses workspace-relative path so two services with the same dir name get different IDs.
+     * Uses the workspace-relative path with segments separated by '/' so that
+     * `team-a/order-service` and `team/a-order-service` produce different IDs.
+     *
+     * Format: `<segment1>/<segment2>/.../<leafName>` — slashes are preserved so
+     * the path structure remains unambiguous. Each segment is sanitized to
+     * lowercase alphanumeric + hyphens.
      */
     generateServiceId(dirPath, repository) {
-        // Make it relative to workspace root to avoid collision
-        const relToWorkspace = path.relative(this.workspaceRoot, dirPath);
-        // Normalize path separators and sanitize
-        const normalized = relToWorkspace
-            .replace(/\\/g, '/')
-            .toLowerCase()
-            .replace(/[^a-z0-9/-]/g, '-')
-            .replace(/\/+/g, '-')
-            .replace(/^-+|-+$/g, '');
-        return normalized || path.basename(dirPath).toLowerCase().replace(/[^a-z0-9-]/g, '-');
+        const relative = path.relative(this.workspaceRoot, dirPath).split(path.sep).join('/');
+        return (relative || path.basename(dirPath)).split('/').map(segment => encodeURIComponent(segment)).join('/');
     }
     countFiles(dirPath, extensions = ['.java']) {
         let count = 0;

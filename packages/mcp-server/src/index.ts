@@ -64,49 +64,7 @@ let lastRepoFingerprints = new Map<string, RepoFingerprint>();
  * This means uncommitted edits are always detected without requiring a commit.
  */
 async function getOrAnalyze(force = false) {
-  if (!cachedResult || force) {
-    cachedResult = await engine.analyze(force);
-    lastRepoFingerprints = await captureRepoFingerprints(cachedResult);
-    return cachedResult;
-  }
-
-  // Cheap freshness check: compare HEAD + dirtyHash for each unique repo
-  const { GitAnalyzer } = await import('@bob-context-graph/core');
-  let stale = false;
-
-  const seenRepos = new Set<string>();
-  for (const svc of cachedResult.services) {
-    const repo = svc.identity.repository;
-    if (seenRepos.has(repo)) continue;
-    seenRepos.add(repo);
-
-    try {
-      const git = new GitAnalyzer(repo);
-      const currentHead = git.getHead(false);
-      const currentDirty = git.getDirtyHash();
-
-      const prev = lastRepoFingerprints.get(repo);
-      if (!prev) {
-        stale = true;
-        break;
-      }
-      if (
-        (currentHead !== 'unknown' && currentHead !== prev.head) ||
-        currentDirty !== prev.dirty
-      ) {
-        stale = true;
-        break;
-      }
-    } catch {
-      // git not available — keep cached
-    }
-  }
-
-  if (stale) {
-    cachedResult = await engine.analyze(false);
-    lastRepoFingerprints = await captureRepoFingerprints(cachedResult);
-  }
-
+  cachedResult = await engine.analyze(force);
   return cachedResult;
 }
 
@@ -282,6 +240,8 @@ async function handleGetServiceContext(serviceArg: string) {
     analyzedAt: svc.analyzedAt,
     fileCount: svc.fileCount,
     semanticSummary: svc.semanticSummary,
+    coverage: svc.coverage,
+    models: svc.models,
     apis: svc.apis.map(a => ({
       method: a.method,
       path: a.path,
@@ -290,6 +250,9 @@ async function handleGetServiceContext(serviceArg: string) {
       requestModel: a.requestModel,
       responseModel: a.responseModel,
       description: a.semanticDescription,
+      requestSchema: a.requestSchema,
+      responseSchema: a.responseSchema,
+      provenance: a.provenance,
     })),
     database: svc.database.map(t => ({
       table: t.tableName,
@@ -315,55 +278,16 @@ async function handleGetServiceContext(serviceArg: string) {
 }
 
 async function handleAnalyzeChange(serviceArg: string) {
+  // F03: get context WITHOUT advancing the comparison baseline.
+  // getOrAnalyze() already has an up-to-date in-memory snapshot; calling it here
+  // does NOT re-index, so the baselineCommit stored in the cache is unchanged.
   const result = await getOrAnalyze();
   const svc = resolveService(serviceArg, result.services);
 
-  // Detect current HEAD and compare with cached
-  const git = new GitAnalyzer(svc.identity.rootPath);
-  const currentCommit = git.getHead(false);
-  const lastCommit = engine.getCache().getLastAnalyzedCommit(svc.identity.serviceId);
-
-  if (!lastCommit) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify({
-            serviceId: svc.identity.serviceId,
-            message: 'No previous analysis found. Run refresh_context to generate initial context.',
-          }),
-        },
-      ],
-    };
-  }
-
-  if (lastCommit === currentCommit) {
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify({
-            serviceId: svc.identity.serviceId,
-            message: 'No changes detected since last analysis.',
-            commit: currentCommit.slice(0, 7),
-            status: 'No changes',
-          }),
-        },
-      ],
-    };
-  }
-
-  // Get changed files
-  const changedFiles = git.getChangedFiles(lastCommit, currentCommit);
-  const changeSet: ChangeSet = {
-    serviceId: svc.identity.serviceId,
-    oldCommit: lastCommit,
-    newCommit: currentCommit,
-    changedFiles,
-    affectsApi: changedFiles.some(f => f.category === 'API'),
-    affectsDatabase: changedFiles.some(f => f.category === 'ENTITY'),
-    affectsDependencies: changedFiles.some(f => ['SERVICE', 'CONFIG'].includes(f.category)),
-  };
+  const changeSet = await engine.detectAndAnalyzeChanges(svc.identity.serviceId, result.services);
+  if (!changeSet) return {content: [{type: 'text', text: JSON.stringify({serviceId: svc.identity.serviceId, status: 'No changes', message: 'No changes detected in this service.'})}]};
+  const {oldCommit: effectiveBaseline, newCommit: currentCommit, changedFiles} = changeSet;
+  const currentDirty = new GitAnalyzer(svc.identity.repository).getDirtyHash([CACHE_DIR], svc.identity.rootPath);
 
   // Run impact analysis
   const relatedServices = result.services.filter(s => s.identity.serviceId !== svc.identity.serviceId);
@@ -382,8 +306,9 @@ async function handleAnalyzeChange(serviceArg: string) {
   const response = {
     serviceId: svc.identity.serviceId,
     change: {
-      oldCommit: lastCommit.slice(0, 7),
+      oldCommit: effectiveBaseline.slice(0, 7),
       newCommit: currentCommit.slice(0, 7),
+      dirtyState: currentDirty !== 'clean' ? 'dirty' : 'clean',
       changedFileCount: changedFiles.length,
       affectedAreas: {
         api: changeSet.affectsApi,
@@ -459,8 +384,9 @@ function resolveService(serviceArg: string, services: typeof cachedResult extend
   if (exactId) return exactId;
 
   // 2. Exact name match
-  const exactName = services.find(s => s.identity.name === serviceArg);
-  if (exactName) return exactName;
+  const exactNames = services.filter(s => s.identity.name === serviceArg);
+  if (exactNames.length === 1) return exactNames[0];
+  if (exactNames.length > 1) throw new McpError(ErrorCode.InvalidParams, `Ambiguous service: ${exactNames.map(s => s.identity.serviceId).join(', ')}`);
 
   // 3. Unique prefix/substring match — only if unambiguous
   const partialMatches = services.filter(

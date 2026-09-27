@@ -38,7 +38,12 @@ export declare class WorkspaceScanner {
     private analyzeDirectory;
     /**
      * F09: Generate a canonical, unique service ID.
-     * Uses workspace-relative path so two services with the same dir name get different IDs.
+     * Uses the workspace-relative path with segments separated by '/' so that
+     * `team-a/order-service` and `team/a-order-service` produce different IDs.
+     *
+     * Format: `<segment1>/<segment2>/.../<leafName>` — slashes are preserved so
+     * the path structure remains unambiguous. Each segment is sanitized to
+     * lowercase alphanumeric + hyphens.
      */
     generateServiceId(dirPath: string, repository?: string): string;
     countFiles(dirPath: string, extensions?: string[]): number;

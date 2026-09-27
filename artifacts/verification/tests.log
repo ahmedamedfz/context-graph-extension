@@ -1,0 +1,403 @@
+
+> bob-context-graph@0.1.0 test
+> npm run build && npm run test --workspaces --if-present && node --test test/*.test.cjs && node test/acceptance.cjs
+
+
+> bob-context-graph@0.1.0 build
+> npm run build --workspaces --if-present
+
+
+> @bob-context-graph/core@0.1.0 build
+> tsc
+
+
+> @bob-context-graph/watsonx@0.1.0 build
+> tsc
+
+
+> @bob-context-graph/mcp-server@0.1.0 build
+> tsc
+
+
+> bob-context-graph@0.2.0 build
+> tsc && node esbuild.js
+
+
+> @bob-context-graph/core@0.1.0 test
+> npm run build && node test/regression.test.js
+
+
+> @bob-context-graph/core@0.1.0 build
+> tsc
+
+
+GitAnalyzer.classifyFile
+  ✓ classifies Spring controller as API
+  ✓ classifies JPA entity as ENTITY
+  ✓ classifies DTO as DTO
+  ✓ classifies application.yml as CONFIG
+  ✓ classifies application.yaml as CONFIG (F08)
+  ✓ classifies pom.xml as CONFIG
+  ✓ classifies Go handler as API
+  ✓ classifies Python view as API
+  ✓ classifies package.json as CONFIG
+
+JpaEntityParser
+  ✓ F16: no annotation bleed — only id is PK
+
+SpringApiParser
+  ✓ F15: handles path= alias in @RequestMapping
+
+WorkspaceScanner
+  ✓ F09: service IDs are unique for same-name dirs in different paths
+  ✓ F01: scanner finds services 3 levels deep
+
+ContextGraphBuilder
+  ✓ F17: shared DB merges tables from both services
+  ✓ F17: applyImpact matches DB node by ID pattern
+
+NodeApiParser
+  ✓ parses Express routes
+
+PythonApiParser
+  ✓ parses FastAPI routes
+
+GoApiParser
+  ✓ parses Gin routes
+
+ContextCache (F03, F10, F11)
+  ✓ F03: getBaselineCommit returns previous commit after two sets
+  ✓ F10: non-git (unknown commit) is not cached
+
+ContextCache.restoreBaseline (F03/F05)
+  ✓ F05: restoreBaseline preserves baseline after cache invalidation
+
+GitAnalyzer dirty-hash (content fingerprint)
+  ✓ DIRTY-hash: getDirtyHash changes when file content changes (same-length edit)
+
+Polyglot incremental (POLY-node, POLY-python, POLY-go)
+
+DependencyAnalyzer DB rename (F08)
+
+ContextCache schema migration (CACHE-schema)
+  ✓ CACHE-schema: old index without schemaVersion is migrated
+
+wrapText regex (Phase 5.2 — template literal escape)
+  ✓ Phase 5.2: wrapText splits "service" on hyphen, not on "s"
+  ✓ POLY-node: NodeApiParser parses Express route in file named index.js
+  ✓ POLY-python: PythonApiParser parses Flask route in app.py
+  ✓ POLY-go: GoApiParser parses net/http handler
+  ✓ F08: DB rename in config removes old DB dependency
+
+28 tests: 28 passed, 0 failed
+[BCG] Full analysis: inventory-service @ e0712fc dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ e0712fc dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ e0712fc dirty=clean (spring-boot)
+[BCG] Full analysis: inventory-service @ e0712fc dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ e0712fc dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ e0712fc dirty=clean (spring-boot)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+[BCG] Incremental analysis: inventory-service e0712fc → fe1a40d dirty=clean
+[BCG] Incremental: no changes scoped to inventory-service — reusing cached context
+[BCG] Incremental analysis: order-service e0712fc → fe1a40d dirty=clean
+[BCG] Re-analyzing APIs for order-service (spring-boot)
+[BCG] Incremental analysis: payment-service e0712fc → fe1a40d dirty=clean
+[BCG] Incremental: no changes scoped to payment-service — reusing cached context
+[BCG] Full analysis: inventory-service @ fe1a40d dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ fe1a40d dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ fe1a40d dirty=clean (spring-boot)
+✔ extension activation, Skip, sidebar, webview, committed impact and live settings (1307.1805ms)
+[BCG] Full analysis: go @ 2ea8b84 dirty=clean (go)
+[BCG] Full analysis: java @ 2ea8b84 dirty=clean (java)
+[BCG] Full analysis: node @ 2ea8b84 dirty=clean (node)
+[BCG] Full analysis: php @ 2ea8b84 dirty=clean (php)
+[BCG] Full analysis: python @ 2ea8b84 dirty=clean (python)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Dirty-state change: node (dirty=ee65943)
+[BCG] Dirty incremental: node @ 2ea8b84 dirty=ee65943
+[BCG] Dirty re-analyzing APIs for node (node)
+[BCG] Dirty re-analyzing dependencies for node
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Incremental analysis: go 2ea8b84 → 4cbdae4 dirty=clean
+[BCG] Incremental: no changes scoped to go — reusing cached context
+[BCG] Incremental analysis: java 2ea8b84 → 4cbdae4 dirty=clean
+[BCG] Incremental: no changes scoped to java — reusing cached context
+[BCG] Incremental analysis: node 2ea8b84 → 4cbdae4 dirty=clean
+[BCG] Re-analyzing APIs for node (node)
+[BCG] Re-analyzing dependencies for node
+[BCG] Incremental analysis: php 2ea8b84 → 4cbdae4 dirty=clean
+[BCG] Incremental: no changes scoped to php — reusing cached context
+[BCG] Incremental analysis: python 2ea8b84 → 4cbdae4 dirty=clean
+[BCG] Incremental: no changes scoped to python — reusing cached context
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Dirty-state change: node (dirty=548965a)
+[BCG] Dirty incremental: node @ 4cbdae4 dirty=548965a
+[BCG] Dirty re-analyzing APIs for node (node)
+[BCG] Dirty re-analyzing dependencies for node
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Dirty-state change: python (dirty=b89b964)
+[BCG] Dirty incremental: python @ 4cbdae4 dirty=b89b964
+[BCG] Dirty re-analyzing APIs for python (python)
+[BCG] Dirty re-analyzing dependencies for python
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Incremental analysis: go 4cbdae4 → 7ab9fa8 dirty=clean
+[BCG] Incremental: no changes scoped to go — reusing cached context
+[BCG] Incremental analysis: java 4cbdae4 → 7ab9fa8 dirty=clean
+[BCG] Incremental: no changes scoped to java — reusing cached context
+[BCG] Incremental analysis: node 4cbdae4 → 7ab9fa8 dirty=clean
+[BCG] Incremental: no changes scoped to node — reusing cached context
+[BCG] Incremental analysis: php 4cbdae4 → 7ab9fa8 dirty=clean
+[BCG] Incremental: no changes scoped to php — reusing cached context
+[BCG] Incremental analysis: python 4cbdae4 → 7ab9fa8 dirty=clean
+[BCG] Re-analyzing APIs for python (python)
+[BCG] Re-analyzing dependencies for python
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Dirty-state change: python (dirty=6bfab04)
+[BCG] Dirty incremental: python @ 7ab9fa8 dirty=6bfab04
+[BCG] Dirty re-analyzing APIs for python (python)
+[BCG] Dirty re-analyzing dependencies for python
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Dirty-state change: go (dirty=4ef91e4)
+[BCG] Dirty incremental: go @ 7ab9fa8 dirty=4ef91e4
+[BCG] Dirty re-analyzing APIs for go (go)
+[BCG] Dirty re-analyzing dependencies for go
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Incremental analysis: go 7ab9fa8 → fd44ead dirty=clean
+[BCG] Re-analyzing APIs for go (go)
+[BCG] Re-analyzing dependencies for go
+[BCG] Incremental analysis: java 7ab9fa8 → fd44ead dirty=clean
+[BCG] Incremental: no changes scoped to java — reusing cached context
+[BCG] Incremental analysis: node 7ab9fa8 → fd44ead dirty=clean
+[BCG] Incremental: no changes scoped to node — reusing cached context
+[BCG] Incremental analysis: php 7ab9fa8 → fd44ead dirty=clean
+[BCG] Incremental: no changes scoped to php — reusing cached context
+[BCG] Incremental analysis: python 7ab9fa8 → fd44ead dirty=clean
+[BCG] Incremental: no changes scoped to python — reusing cached context
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Dirty-state change: go (dirty=c075b45)
+[BCG] Dirty incremental: go @ fd44ead dirty=c075b45
+[BCG] Dirty re-analyzing APIs for go (go)
+[BCG] Dirty re-analyzing dependencies for go
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Dirty-state change: java (dirty=5eed921)
+[BCG] Dirty incremental: java @ fd44ead dirty=5eed921
+[BCG] Dirty re-analyzing APIs for java (java)
+[BCG] Dirty re-analyzing dependencies for java
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Incremental analysis: go fd44ead → a20a7c9 dirty=clean
+[BCG] Incremental: no changes scoped to go — reusing cached context
+[BCG] Incremental analysis: java fd44ead → a20a7c9 dirty=clean
+[BCG] Re-analyzing APIs for java (java)
+[BCG] Re-analyzing dependencies for java
+[BCG] Incremental analysis: node fd44ead → a20a7c9 dirty=clean
+[BCG] Incremental: no changes scoped to node — reusing cached context
+[BCG] Incremental analysis: php fd44ead → a20a7c9 dirty=clean
+[BCG] Incremental: no changes scoped to php — reusing cached context
+[BCG] Incremental analysis: python fd44ead → a20a7c9 dirty=clean
+[BCG] Incremental: no changes scoped to python — reusing cached context
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Dirty-state change: java (dirty=7c86aed)
+[BCG] Dirty incremental: java @ a20a7c9 dirty=7c86aed
+[BCG] Dirty re-analyzing APIs for java (java)
+[BCG] Dirty re-analyzing dependencies for java
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Dirty-state change: php (dirty=2e0e699)
+[BCG] Dirty incremental: php @ a20a7c9 dirty=2e0e699
+[BCG] Dirty re-analyzing APIs for php (php)
+[BCG] Dirty re-analyzing dependencies for php
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Incremental analysis: go a20a7c9 → f1a8dc2 dirty=clean
+[BCG] Incremental: no changes scoped to go — reusing cached context
+[BCG] Incremental analysis: java a20a7c9 → f1a8dc2 dirty=clean
+[BCG] Incremental: no changes scoped to java — reusing cached context
+[BCG] Incremental analysis: node a20a7c9 → f1a8dc2 dirty=clean
+[BCG] Incremental: no changes scoped to node — reusing cached context
+[BCG] Incremental analysis: php a20a7c9 → f1a8dc2 dirty=clean
+[BCG] Re-analyzing APIs for php (php)
+[BCG] Re-analyzing dependencies for php
+[BCG] Incremental analysis: python a20a7c9 → f1a8dc2 dirty=clean
+[BCG] Incremental: no changes scoped to python — reusing cached context
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Dirty-state change: php (dirty=b2697be)
+[BCG] Dirty incremental: php @ f1a8dc2 dirty=b2697be
+[BCG] Dirty re-analyzing APIs for php (php)
+[BCG] Dirty re-analyzing dependencies for php
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (5 services)
+[BCG] Full analysis: svc @ fc972c4 dirty=clean (node)
+[BCG] Full analysis: svc @ 97787a9 dirty=clean (node)
+✔ dirty paths preserve whitespace, Unicode, both rename owners, and new-file content (264.612625ms)
+✔ all five adapters update dirty, committed and deleted endpoints with sibling reuse (3495.541417ms)
+✔ shared cache isolates workspaces and IDs preserve case, punctuation, and hierarchy (300.720291ms)
+[BCG] Full analysis: svc @ c22c0a7 dirty=clean (node)
+[BCG] Full analysis: svc @ c22c0a7 dirty=clean (node)
+[BCG] Full analysis: workspace @ unknown dirty=clean (node)
+[BCG] Full analysis: workspace @ e8bef4c dirty=clean (node)
+✔ cache serializes simultaneous writers and rejects incompatible schema (98.082542ms)
+✔ Compose edits invalidate cached dependencies without source edits or leaking credentials (243.457875ms)
+✔ non-Git to Git does not fabricate a diff against unknown (209.679709ms)
+✔ local client uses chat template without thinking and accepts fenced JSON (0.301875ms)
+✔ malformed AI impact is replaced by labeled deterministic output (0.299ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4703.220709
+F01 PASS Root discovers bundled Spring demo
+[BCG] Full analysis: inventory-service @ c833661 dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ c833661 dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ c833661 dirty=clean (spring-boot)
+DEMO PASS 3 services / 18 APIs / 5 tables / 3 databases
+GRAPH PASS 2 service dependency edges
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+CACHE PASS Warm engine uses all three caches
+F03-before PASS Impact works before explicit refresh
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+[BCG] Incremental analysis: inventory-service c833661 → 6dc1843 dirty=clean
+[BCG] Incremental: no changes scoped to inventory-service — reusing cached context
+[BCG] Incremental analysis: order-service c833661 → 6dc1843 dirty=clean
+[BCG] Re-analyzing DB schema for order-service
+[BCG] Incremental analysis: payment-service c833661 → 6dc1843 dirty=clean
+[BCG] Incremental: no changes scoped to payment-service — reusing cached context
+F02 PASS Commit refreshes 1 / caches 2
+F03-after PASS Impact works after analysis
+F13-facts PASS Impact prompt includes field before/after types
+[BCG] Full analysis: order-service @ 6dc1843 dirty=clean (spring-boot)
+F03-refresh PASS Targeted refresh preserves impact baseline
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+[BCG] Incremental analysis: inventory-service 6dc1843 → dd5c5a9 dirty=clean
+[BCG] Incremental: no changes scoped to inventory-service — reusing cached context
+[BCG] Incremental analysis: order-service 6dc1843 → dd5c5a9 dirty=clean
+[BCG] Re-analyzing dependencies for order-service
+[BCG] Incremental analysis: payment-service 6dc1843 → dd5c5a9 dirty=clean
+[BCG] Incremental: no changes scoped to payment-service — reusing cached context
+F08 PASS DB rename replaces old DB dependency
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+[BCG] Full analysis: inventory-service @ dd5c5a9 dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ dd5c5a9 dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ dd5c5a9 dirty=clean (spring-boot)
+BRANCH PASS Fingerprint cache reflects new branch at same HEAD
+[BCG] Full analysis: inventory-service @ 56e61dc dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ 56e61dc dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ 56e61dc dirty=clean (spring-boot)
+DIRTY-path PASS Unstaged path matches actual relative file
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+[BCG] Dirty-state change: order-service (dirty=ad9cdf4)
+[BCG] Dirty incremental: order-service @ 56e61dc dirty=ad9cdf4
+[BCG] Dirty re-analyzing APIs for order-service (spring-boot)
+DIRTY-first PASS Unstaged controller edit refreshes API
+DIRTY-hash PASS Second edit of same file changes dirty hash
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+[BCG] Dirty-state change: order-service (dirty=ec303d6)
+[BCG] Dirty incremental: order-service @ 56e61dc dirty=ec303d6
+[BCG] Dirty re-analyzing APIs for order-service (spring-boot)
+DIRTY-second PASS Second unstaged edit appears in APIs
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+DIRTY-stage PASS Staged edit is detected
+DIRTY-impact PASS Dirty impact available after initial clean baseline
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+DIRTY-restore PASS Restore returns clean cache
+[BCG] Full analysis: inventory-service @ 28f5ce6 dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ 28f5ce6 dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ 28f5ce6 dirty=clean (spring-boot)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+[BCG] Incremental analysis: inventory-service 28f5ce6 → 22b7468 dirty=clean
+[BCG] Incremental: no changes scoped to inventory-service — reusing cached context
+[BCG] Incremental analysis: order-service 28f5ce6 → 22b7468 dirty=clean
+[BCG] Re-analyzing APIs for order-service (spring-boot)
+[BCG] Incremental analysis: payment-service 28f5ce6 → 22b7468 dirty=clean
+[BCG] Incremental: no changes scoped to payment-service — reusing cached context
+F07 PASS Exposed DTO sets affectsApi after analysis
+[BCG] Full analysis: inventory-service @ unknown dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ unknown dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ unknown dirty=clean (spring-boot)
+[BCG] Full analysis: inventory-service @ unknown dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ unknown dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ unknown dirty=clean (spring-boot)
+F10-engine PASS Non-git engine updates source
+F11-sequential PASS Second cache instance sees first writer
+CACHE-schema PASS Old schema entries invalidated
+[BCG] Full analysis: microservices/inventory-service @ 124ec0d dirty=clean (spring-boot)
+[BCG] Full analysis: microservices/order-service @ 124ec0d dirty=clean (spring-boot)
+[BCG] Full analysis: microservices/payment-service @ 124ec0d dirty=clean (spring-boot)
+F13-api PASS describeApi called for all 18 endpoints
+[BCG] Full analysis: services/ai @ 88b679b dirty=clean (python)
+[BCG] Full analysis: services/audit @ 88b679b dirty=clean (php)
+[BCG] Full analysis: services/cart @ 88b679b dirty=clean (go)
+[BCG] Full analysis: services/catalog @ 88b679b dirty=clean (python)
+[BCG] Full analysis: services/gateway @ 88b679b dirty=clean (node)
+[BCG] Full analysis: services/inventory @ 88b679b dirty=clean (go)
+[BCG] Full analysis: services/notifications @ 88b679b dirty=clean (node)
+[BCG] Full analysis: services/orders @ 88b679b dirty=clean (python)
+[BCG] Full analysis: services/payment @ 88b679b dirty=clean (java)
+[BCG] Full analysis: services/pricing @ 88b679b dirty=clean (java)
+[BCG] Full analysis: services/shipping @ 88b679b dirty=clean (php)
+[BCG] Full analysis: services/storefront @ 88b679b dirty=clean (node)
+POLYGLOT PASS 12 application services discovered
+[BCG] Full analysis: node @ de596a4 dirty=clean (node)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (1 services)
+[BCG] Incremental analysis: node de596a4 → fcc1717 dirty=clean
+[BCG] Re-analyzing APIs for node (node)
+[BCG] Re-analyzing dependencies for node
+POLY-node PASS Committed node route refreshes
+[BCG] Full analysis: python @ 9669a0e dirty=clean (python)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (1 services)
+[BCG] Incremental analysis: python 9669a0e → 4a7a7c7 dirty=clean
+[BCG] Re-analyzing APIs for python (python)
+[BCG] Re-analyzing dependencies for python
+POLY-python PASS Committed python route refreshes
+[BCG] Full analysis: go @ 0334c07 dirty=clean (go)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (1 services)
+[BCG] Incremental analysis: go 0334c07 → f86715d dirty=clean
+[BCG] Re-analyzing APIs for go (go)
+[BCG] Re-analyzing dependencies for go
+POLY-go PASS Committed go route refreshes
+F09-collision PASS Canonical IDs resist path flattening collision
+[BCG] Full analysis: inventory-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+[BCG] Full analysis: inventory-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+[BCG] Full analysis: inventory-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+[BCG] Full analysis: inventory-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+[BCG] Full analysis: inventory-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Full analysis: order-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Full analysis: payment-service @ 22b7468 dirty=clean (spring-boot)
+[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (3 services)
+SUMMARY 28 PASS 0 FAIL
+M01 PASS Four tools available
+M02 PASS 3 services and 18 APIs
+M-warm PASS Unchanged query reports cached:3
+M-dirty PASS Unstaged edit shows Changed
+M-dirty2 PASS Second edit refreshes path
+F04 PASS MCP sees new HEAD
+M-impact PASS Committed change produces impact report
+F05 PASS Targeted MCP refresh caches other services
+M-impact-refresh PASS Impact survives targeted refresh
+M-restart PASS Impact survives process restart
+M-unchanged PASS No fabricated impact on untouched service
+F23-partial PASS Ambiguous partial lookup rejected
+F06 PASS No non-JSON protocol errors
+F23-exact PASS Duplicate exact names rejected
+F10-MCP PASS Non-git MCP query refreshes content
+F14 PASS Transitive consumers included, isolated excluded
+F12 PASS Internal DB change does not blindly mark REST consumer HIGH
+F17-order PASS Highest severity independent of impact order
+F17-target PASS DB-only impact does not highlight service HIGH
+F22-static PASS CSP nonce and no injected script delimiter
+Acceptance: 48/48 passed. Evidence: /var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq

@@ -12,6 +12,8 @@ export class WatsonxRuntime {
     this.client = client;
   }
 
+  dispose(): void { this.client.dispose?.(); }
+
   /**
    * Generate a concise semantic summary for a service.
    */
@@ -53,12 +55,13 @@ export class WatsonxRuntime {
         migrationRecommendations: string[];
       }>(prompt, 1500);
 
-      if (result && result.impacts) {
+      if (result && Array.isArray(result.impacts) && result.impacts.every(i => i && typeof i.component === 'string' && ['SERVICE', 'DATABASE', 'API', 'FRONTEND'].includes(i.componentType) && ['HIGH', 'MEDIUM', 'LOW'].includes(i.severity) && typeof i.reason === 'string') && (!result.migrationRecommendations || (Array.isArray(result.migrationRecommendations) && result.migrationRecommendations.every(s => typeof s === 'string')))) {
         return {
           serviceId: changedService.identity.serviceId,
           change: changeDescription,
           detectedAt: new Date().toISOString(),
           impacts: result.impacts,
+          reasoningSource: 'ai',
           migrationRecommendations: result.migrationRecommendations ?? [],
           changeInterpretation: result.interpretation,
         };
@@ -171,7 +174,7 @@ Respond with JSON:
     const depCount = context.dependencies.filter(d => d.type === 'REST').length;
     const dbCount = context.dependencies.filter(d => d.type === 'DATABASE').length;
 
-    const parts = [`${context.identity.name} is a Spring Boot microservice`];
+    const parts = [`${context.identity.name} is a ${context.detectedStack ?? 'unknown-stack'} service (deterministic summary)`];
     if (apiCount > 0) parts.push(`exposing ${apiCount} REST endpoint${apiCount > 1 ? 's' : ''}`);
     if (tableCount > 0) parts.push(`managing ${tableCount} database table${tableCount > 1 ? 's' : ''}`);
     if (depCount > 0) parts.push(`depending on ${depCount} other service${depCount > 1 ? 's' : ''}`);
@@ -215,8 +218,7 @@ Respond with JSON:
       const dependsDirectly = [...deps].some(
         target =>
           target === changedId ||
-          target === changedName ||
-          target.includes(changedName.replace('-service', ''))
+          target === changedName
       );
       if (dependsDirectly) {
         directConsumers.add(svc.identity.serviceId);
@@ -257,8 +259,9 @@ Respond with JSON:
       impacts.push({
         component: svc.identity.name,
         componentType: 'SERVICE',
-        severity: changeSet.affectsDatabase ? 'HIGH' : 'MEDIUM',
-        reason: `${svc.identity.name} directly calls ${changedName} and is affected by ${
+        nodeId: svc.identity.serviceId,
+        severity: changeSet.affectsApi && changeSet.fieldChanges?.some(f => f.category === 'DTO' && f.before !== null && f.before !== f.after) ? 'HIGH' : changeSet.affectsApi ? 'MEDIUM' : 'LOW',
+        reason: `${svc.identity.name} directly calls ${changedName} and may be affected by ${
           changeSet.affectsDatabase ? 'database schema changes' : 'API changes'
         }.`,
         recommendedAction: `Review integration contracts with ${changedName}.`,
@@ -271,6 +274,7 @@ Respond with JSON:
       impacts.push({
         component: svc.identity.name,
         componentType: 'SERVICE',
+        nodeId: svc.identity.serviceId,
         severity: 'LOW',
         reason: `${svc.identity.name} is a transitive consumer of ${changedName} (indirect dependency). Impact is potential.`,
         recommendedAction: `Monitor for indirect failures; verify integration chain.`,
@@ -281,6 +285,7 @@ Respond with JSON:
     if (changeSet.affectsApi) {
       impacts.push({
         component: `${changedName} API`,
+        nodeId: changedId,
         componentType: 'API',
         severity: 'MEDIUM',
         reason: 'REST API contract may have changed, affecting consumers.',
@@ -290,8 +295,9 @@ Respond with JSON:
 
     // Add database impact
     if (changeSet.affectsDatabase) {
-      impacts.push({
-        component: `${changedName} Database`,
+      for (const db of changedService.dependencies.filter(d => d.type === 'DATABASE')) impacts.push({
+        component: db.targetService,
+        nodeId: `db:${db.targetService}`,
         componentType: 'DATABASE',
         severity: 'HIGH',
         reason: 'Database schema changes require migration scripts and may break existing queries.',
@@ -304,6 +310,8 @@ Respond with JSON:
       change: changeDescription,
       detectedAt: new Date().toISOString(),
       impacts,
+      reasoningSource: 'deterministic',
+      traversalTruncated: queue.length > 0,
       migrationRecommendations: this.generateMigrationSteps(changeSet, changedService),
       changeInterpretation: `Detected changes in ${changeSet.changedFiles.length} files affecting ${
         [changeSet.affectsApi && 'API', changeSet.affectsDatabase && 'DB schema', changeSet.affectsDependencies && 'dependencies']
@@ -319,7 +327,7 @@ Respond with JSON:
     if (changeSet.affectsDatabase) types.push('database schema changes');
     if (changeSet.affectsDependencies) types.push('dependency changes');
     const desc = types.length > 0 ? types.join(', ') : 'code changes';
-    return `${changeSet.serviceId}: ${desc} (${changeSet.changedFiles.length} files, ${changeSet.oldCommit.slice(0, 7)} → ${changeSet.newCommit.slice(0, 7)})`;
+    return `${changeSet.serviceId}: ${desc} (${changeSet.changedFiles.length} files, ${changeSet.oldCommit.slice(0, 7)} → ${changeSet.newCommit.slice(0, 7)})` + (changeSet.fieldChanges?.map(f => `\n${f.file}: ${f.field}: ${f.before ?? '(absent)'} → ${f.after ?? '(removed)'}`).join('') ?? '');
   }
 
   private generateMigrationSteps(changeSet: ChangeSet, svc: ServiceContext): string[] {

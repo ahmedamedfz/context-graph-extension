@@ -1,15 +1,27 @@
 {
   "name": "bob-context-graph",
   "displayName": "Bob Context Graph",
-  "description": "Persistent, commit-aware system intelligence for IBM Bob — visualize microservice dependencies and change impact",
-  "version": "0.1.0",
+  "description": "Explore microservice APIs, database schemas and dependencies, and analyze Git-aware change impact in VS Code and IBM Bob.",
+  "version": "0.2.0",
   "publisher": "bob-context-graph",
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Other"],
-  "keywords": ["ibm", "bob", "microservices", "context", "graph", "spring", "watsonx"],
-  "activationEvents": ["onStartupFinished"],
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "ibm",
+    "bob",
+    "microservices",
+    "context",
+    "graph",
+    "spring",
+    "watsonx"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "icon": "resources/icon.png",
   "contributes": {
@@ -107,11 +119,15 @@
         },
         "bcg.aiProvider": {
           "type": "string",
-          "enum": ["watsonx", "local", "none"],
+          "enum": [
+            "watsonx",
+            "local",
+            "none"
+          ],
           "enumDescriptions": [
             "IBM watsonx.ai cloud service (requires API key and project ID)",
-            "Local IBM Granite 4.2 3B via Ollama (no credentials needed)",
-            "Deterministic analysis only — no AI-powered summaries"
+            "Bundled IBM Granite 4.2 3B, fully offline on macOS Apple Silicon; no Ollama required",
+            "Deterministic analysis only \u2014 no AI-powered summaries"
           ],
           "default": "none",
           "description": "AI provider used for service summaries and impact analysis. Set automatically by the setup wizard."
@@ -119,7 +135,7 @@
         "bcg.watsonxBaseUrl": {
           "type": "string",
           "default": "https://us-south.ml.cloud.ibm.com",
-          "description": "watsonx.ai base URL (advanced — change only when targeting a different region)"
+          "description": "watsonx.ai base URL (advanced \u2014 change only when targeting a different region)"
         },
         "bcg.watsonxModelId": {
           "type": "string",
@@ -133,7 +149,7 @@
     "vscode:prepublish": "npm run build",
     "build": "tsc && node esbuild.js",
     "build:watch": "tsc --watch",
-    "package": "vsce package --no-dependencies",
+    "package": "node ../../scripts/package-offline.cjs",
     "lint": "echo ok"
   },
   "dependencies": {
@@ -146,5 +162,17 @@
     "typescript": "^5.4.0",
     "@vscode/vsce": "^3.0.0",
     "esbuild": "^0.20.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ahmedamedfz/context-graph-extension.git"
+  },
+  "license": "MIT",
+  "files": [
+    "dist/extension.js",
+    "resources/**",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md",
+    "LICENSE"
+  ]
 }

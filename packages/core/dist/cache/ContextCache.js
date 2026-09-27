@@ -36,218 +36,150 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ContextCache = void 0;
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
-const SCHEMA_VERSION = 3;
-/**
- * JSON file-based persistent cache for ServiceContext objects.
- * Cache key: serviceId + branch + commitHash + dirtyHash
- *
- * The compound key lets uncommitted working-tree edits invalidate the cache
- * without requiring a git commit:
- *  - dirtyHash='clean'  → no uncommitted changes → keyed purely on commit
- *  - dirtyHash=<hex>    → uncommitted changes present → separate cache slot
- *
- * A workspace fingerprint (hash of marker-file paths+sizes) is stored so
- * the engine can skip the full filesystem re-discovery walk when the
- * project structure hasn't changed.
- */
+const crypto_1 = require("crypto");
+const SCHEMA_VERSION = 4;
+/** Atomic payloads and a process lock protect index read/modify/write transactions. */
 class ContextCache {
-    constructor(cacheDir) {
+    constructor(cacheDir, namespace) {
         this.cacheDir = cacheDir;
+        if (namespace)
+            this.cacheDir = cacheDir = path.join(cacheDir, 'workspace-' + (0, crypto_1.createHash)('sha256').update(namespace).digest('hex').slice(0, 16));
         fs.mkdirSync(cacheDir, { recursive: true });
         this.indexPath = path.join(cacheDir, 'index.json');
-        this.index = this.loadIndex();
     }
     loadIndex() {
         try {
-            if (fs.existsSync(this.indexPath)) {
-                const parsed = JSON.parse(fs.readFileSync(this.indexPath, 'utf8'));
-                // Migrate old entries that lack schemaVersion / baselineCommit / lastDirtyHash
-                for (const [, meta] of Object.entries(parsed.metadata)) {
-                    if (!('schemaVersion' in meta)) {
-                        meta.schemaVersion = 1;
+            const index = JSON.parse(fs.readFileSync(this.indexPath, 'utf8'));
+            if (!index.metadata || typeof index.metadata !== 'object')
+                throw Error('Invalid metadata');
+            for (const [id, meta] of Object.entries(index.metadata)) {
+                if (!meta || meta.schemaVersion !== SCHEMA_VERSION) {
+                    // Legacy history can be read, but payloads must be rebuilt with this parser version.
+                    if (meta && meta.schemaVersion === undefined) {
                         meta.baselineCommit = meta.previousCommit ?? null;
-                    }
-                    if (!('lastDirtyHash' in meta)) {
                         meta.lastDirtyHash = 'clean';
                     }
+                    else
+                        delete index.metadata[id];
                 }
-                return parsed;
+            }
+            return index;
+        }
+        catch (err) {
+            if (err.code !== 'ENOENT')
+                process.stderr.write(`[BCG] Invalid cache index; rebuilding: ${err.message}\n`);
+            return { metadata: {} };
+        }
+    }
+    atomicWrite(file, value) {
+        const tmp = `${file}.${process.pid}.${(0, crypto_1.randomUUID)()}.tmp`;
+        try {
+            fs.writeFileSync(tmp, JSON.stringify(value));
+            fs.renameSync(tmp, file);
+        }
+        finally {
+            fs.rmSync(tmp, { force: true });
+        }
+    }
+    update(fn) {
+        const lock = this.indexPath + '.lock';
+        const deadline = Date.now() + 5000;
+        let fd;
+        for (;;) {
+            try {
+                fd = fs.openSync(lock, 'wx');
+                fs.writeFileSync(fd, String(process.pid));
+                break;
+            }
+            catch (err) {
+                if (err.code !== 'EEXIST')
+                    throw err;
+                try {
+                    const pid = Number(fs.readFileSync(lock, 'utf8'));
+                    if (pid > 0) {
+                        try {
+                            process.kill(pid, 0);
+                        }
+                        catch (e) {
+                            if (e.code === 'ESRCH') {
+                                fs.unlinkSync(lock);
+                                continue;
+                            }
+                        }
+                    }
+                }
+                catch { /* another writer released it */ }
+                if (Date.now() >= deadline)
+                    throw Error('Cache lock timeout');
+                Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10);
             }
         }
-        catch {
-            // corrupt index — start fresh
-        }
-        return { metadata: {} };
-    }
-    saveIndex() {
         try {
-            // Atomic write: write to temp then rename
-            const tmp = this.indexPath + '.tmp';
-            fs.writeFileSync(tmp, JSON.stringify(this.index, null, 2), 'utf8');
-            fs.renameSync(tmp, this.indexPath);
+            const index = this.loadIndex();
+            fn(index);
+            this.atomicWrite(this.indexPath, index);
         }
-        catch {
-            // ignore write errors
+        finally {
+            fs.closeSync(fd);
+            fs.unlinkSync(lock);
         }
     }
-    contextFilePath(serviceId, branch, commitHash, dirtyHash = 'clean') {
-        // Safe filename: replace slashes in branch names
-        const safeBranch = branch.replace(/[/\\]/g, '_');
-        const dirtySuffix = dirtyHash !== 'clean' ? `_${dirtyHash}` : '';
-        return path.join(this.cacheDir, `${serviceId}_${safeBranch}_${commitHash}${dirtySuffix}.json`);
+    contextFilePath(id, branch, commit, dirty = 'clean') {
+        const key = (0, crypto_1.createHash)('sha256').update(JSON.stringify([id, branch, commit, dirty])).digest('hex');
+        return path.join(this.cacheDir, key + '.json');
     }
-    /**
-     * Get cached context for a service at a specific commit + dirty state.
-     */
-    get(serviceId, branch, commitHash, dirtyHash = 'clean') {
-        const filePath = this.contextFilePath(serviceId, branch, commitHash, dirtyHash);
+    get(id, branch, commit, dirty = 'clean') {
+        const meta = this.loadIndex().metadata[id];
+        if (meta?.schemaVersion !== SCHEMA_VERSION)
+            return null;
         try {
-            if (fs.existsSync(filePath)) {
-                return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-            }
+            const ctx = JSON.parse(fs.readFileSync(this.contextFilePath(id, branch, commit, dirty), 'utf8'));
+            return ctx.identity.serviceId === id && ctx.identity.branch === branch && ctx.identity.commitHash === commit ? ctx : null;
         }
-        catch {
-            // corrupt cache entry
+        catch (err) {
+            if (err.code !== 'ENOENT')
+                process.stderr.write(`[BCG] Invalid cached context ${id}: ${err.message}\n`);
+            return null;
         }
-        return null;
     }
-    /**
-     * Store a ServiceContext in the cache.
-     * dirtyHash='clean' means it was analysed against the committed HEAD only.
-     */
-    set(context, dirtyHash = 'clean') {
-        const { serviceId, branch, commitHash } = context.identity;
-        // Write context file
-        const filePath = this.contextFilePath(serviceId, branch, commitHash, dirtyHash);
-        try {
-            const tmp = filePath + '.tmp';
-            fs.writeFileSync(tmp, JSON.stringify(context, null, 2), 'utf8');
-            fs.renameSync(tmp, filePath);
-        }
-        catch {
-            return; // can't write cache
-        }
-        // Reload index from disk before modifying to avoid lost updates (F11)
-        this.index = this.loadIndex();
-        // Update metadata index — F03: track baselineCommit separately
-        const existing = this.index.metadata[serviceId];
-        const prevCommit = existing?.lastAnalyzedCommit ?? null;
-        this.index.metadata[serviceId] = {
-            lastAnalyzedCommit: commitHash,
-            lastDirtyHash: dirtyHash,
-            // baselineCommit: only advance when the commit actually changed
-            baselineCommit: prevCommit !== commitHash ? prevCommit : (existing?.baselineCommit ?? null),
-            previousCommit: prevCommit,
-            lastAnalyzedAt: new Date().toISOString(),
-            schemaVersion: SCHEMA_VERSION,
-        };
-        this.saveIndex();
+    getLatest(id) {
+        const m = this.loadIndex().metadata[id];
+        return m ? this.get(id, m.branch ?? 'main', m.lastAnalyzedCommit, m.lastDirtyHash) : null;
     }
-    /**
-     * Get the last analyzed commit hash for a service.
-     */
-    getLastAnalyzedCommit(serviceId) {
-        // Re-read index from disk so a concurrent writer's changes are visible (F11)
-        this.index = this.loadIndex();
-        return this.index.metadata[serviceId]?.lastAnalyzedCommit ?? null;
-    }
-    /**
-     * Get the dirty hash that was current at the last analysis.
-     * 'clean' means no uncommitted changes were present during the last analysis.
-     */
-    getLastDirtyHash(serviceId) {
-        this.index = this.loadIndex();
-        return this.index.metadata[serviceId]?.lastDirtyHash ?? 'clean';
-    }
-    /**
-     * F03: Get the baseline commit for change comparison.
-     * This is the commit that was current BEFORE the latest index write.
-     */
-    getBaselineCommit(serviceId) {
-        this.index = this.loadIndex();
-        return this.index.metadata[serviceId]?.baselineCommit ?? null;
-    }
-    /**
-     * Get the previous commit (before the last analysis) for incremental diff.
-     */
-    getPreviousCommit(serviceId) {
-        return this.index.metadata[serviceId]?.previousCommit ?? null;
-    }
-    /**
-     * Check if we have a cached context for the current commit + dirty state.
-     */
-    isCached(serviceId, branch, commitHash, dirtyHash = 'clean') {
-        return this.get(serviceId, branch, commitHash, dirtyHash) !== null;
-    }
-    // ── Workspace fingerprint ───────────────────────────────────────────────
-    /**
-     * Store the workspace fingerprint (hash of marker-file topology) and the
-     * ordered list of discovered service IDs that goes with it. This lets the
-     * engine skip the full filesystem crawl on the next startup when the
-     * project structure hasn't changed.
-     */
-    setWorkspaceFingerprint(fingerprint, serviceIds) {
-        this.index = this.loadIndex();
-        this.index.workspaceFingerprint = fingerprint;
-        this.index.discoveredServiceIds = serviceIds;
-        this.saveIndex();
-    }
-    /**
-     * Returns { fingerprint, serviceIds } if a stored workspace fingerprint
-     * exists, or null if none is stored yet.
-     */
-    getWorkspaceFingerprint() {
-        this.index = this.loadIndex();
-        if (this.index.workspaceFingerprint && this.index.discoveredServiceIds) {
-            return {
-                fingerprint: this.index.workspaceFingerprint,
-                serviceIds: this.index.discoveredServiceIds,
+    set(context, dirty = 'clean') {
+        const { serviceId: id, branch, commitHash: commit } = context.identity;
+        this.update(index => {
+            this.atomicWrite(this.contextFilePath(id, branch, commit, dirty), context);
+            const old = index.metadata[id], prev = old?.lastAnalyzedCommit ?? null;
+            index.metadata[id] = {
+                lastAnalyzedCommit: commit, lastDirtyHash: dirty, branch,
+                baselineCommit: prev !== commit ? (prev === 'unknown' ? null : prev) : (old?.baselineCommit ?? null),
+                previousCommit: prev, lastAnalyzedAt: context.analyzedAt, schemaVersion: SCHEMA_VERSION,
             };
-        }
-        return null;
+        });
     }
-    // ── Utility ─────────────────────────────────────────────────────────────
-    /**
-     * List all cached service IDs with their latest commit info.
-     */
+    getLastAnalyzedCommit(id) { return this.loadIndex().metadata[id]?.lastAnalyzedCommit ?? null; }
+    getLastDirtyHash(id) { return this.loadIndex().metadata[id]?.lastDirtyHash ?? 'clean'; }
+    getBaselineCommit(id) { return this.loadIndex().metadata[id]?.baselineCommit ?? null; }
+    getPreviousCommit(id) { return this.loadIndex().metadata[id]?.previousCommit ?? null; }
+    restoreBaseline(id, baseline, last) {
+        this.update(index => { if (index.metadata[id])
+            index.metadata[id].baselineCommit = baseline ?? last; });
+    }
+    isCached(id, branch, commit, dirty = 'clean') { return this.get(id, branch, commit, dirty) !== null; }
+    setWorkspaceFingerprint(fingerprint, ids) {
+        this.update(index => { index.workspaceFingerprint = fingerprint; index.discoveredServiceIds = ids; });
+    }
+    getWorkspaceFingerprint() {
+        const index = this.loadIndex();
+        return index.workspaceFingerprint && index.discoveredServiceIds ? { fingerprint: index.workspaceFingerprint, serviceIds: index.discoveredServiceIds } : null;
+    }
     listCached() {
-        return Object.entries(this.index.metadata).map(([serviceId, meta]) => ({
-            serviceId,
-            commitHash: meta.lastAnalyzedCommit,
-            dirtyHash: meta.lastDirtyHash,
-            analyzedAt: meta.lastAnalyzedAt,
-        }));
+        return Object.entries(this.loadIndex().metadata).map(([serviceId, m]) => ({ serviceId, commitHash: m.lastAnalyzedCommit, dirtyHash: m.lastDirtyHash, analyzedAt: m.lastAnalyzedAt }));
     }
-    /**
-     * Invalidate cache for a service.
-     */
-    invalidate(serviceId) {
-        // Remove all cache files for this service
-        try {
-            const files = fs.readdirSync(this.cacheDir);
-            for (const file of files) {
-                if (file.startsWith(serviceId + '_')) {
-                    fs.unlinkSync(path.join(this.cacheDir, file));
-                }
-            }
-        }
-        catch {
-            // ignore
-        }
-        delete this.index.metadata[serviceId];
-        this.saveIndex();
-    }
-    /**
-     * Estimate token savings based on context size.
-     */
-    estimateTokenSavings(context) {
-        const json = JSON.stringify(context);
-        // Rough estimate: 4 chars per token
-        return Math.floor(json.length / 4);
-    }
-    close() {
-        // no-op for JSON cache — nothing to close
-    }
+    invalidate(id) { this.update(index => { delete index.metadata[id]; }); }
+    estimateTokenSavings(context) { return Math.floor(JSON.stringify(context).length / 4); }
+    close() { }
 }
 exports.ContextCache = ContextCache;
 //# sourceMappingURL=ContextCache.js.map

@@ -1,0 +1,1779 @@
+[
+  {
+    "name": "get_system_context",
+    "args": {},
+    "result": {
+      "workspaceRoot": "/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/mcp",
+      "serviceCount": 3,
+      "totalApis": 18,
+      "totalTables": 5,
+      "cacheStats": {
+        "cached": 0,
+        "refreshed": 3,
+        "failed": 0
+      },
+      "services": [
+        {
+          "serviceId": "inventory-service",
+          "name": "inventory-service",
+          "branch": "main",
+          "commit": "466e196",
+          "status": "Indexed",
+          "apiCount": 6,
+          "tableCount": 2,
+          "dependencyCount": 1,
+          "dependencies": [
+            {
+              "target": "inventory_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] inventory-service: spring-boot service; 6 detected endpoints, 2 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:26.042Z"
+        },
+        {
+          "serviceId": "order-service",
+          "name": "order-service",
+          "branch": "main",
+          "commit": "466e196",
+          "status": "Indexed",
+          "apiCount": 6,
+          "tableCount": 2,
+          "dependencyCount": 3,
+          "dependencies": [
+            {
+              "target": "inventory-service",
+              "type": "REST"
+            },
+            {
+              "target": "payment-service",
+              "type": "REST"
+            },
+            {
+              "target": "orders_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] order-service: spring-boot service; 6 detected endpoints, 2 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:26.061Z"
+        },
+        {
+          "serviceId": "payment-service",
+          "name": "payment-service",
+          "branch": "main",
+          "commit": "466e196",
+          "status": "Indexed",
+          "apiCount": 6,
+          "tableCount": 1,
+          "dependencyCount": 1,
+          "dependencies": [
+            {
+              "target": "payment_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] payment-service: spring-boot service; 6 detected endpoints, 1 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:26.077Z"
+        }
+      ],
+      "graph": {
+        "nodeCount": 6,
+        "edgeCount": 5,
+        "edges": [
+          {
+            "from": "inventory-service",
+            "to": "db:inventory_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "order-service",
+            "to": "db:orders_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "payment-service",
+            "to": "db:payment_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "order-service",
+            "to": "inventory-service",
+            "type": "SERVICE_DEPENDS_ON_SERVICE"
+          },
+          {
+            "from": "order-service",
+            "to": "payment-service",
+            "type": "SERVICE_DEPENDS_ON_SERVICE"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "get_system_context",
+    "args": {},
+    "result": {
+      "workspaceRoot": "/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/mcp",
+      "serviceCount": 3,
+      "totalApis": 18,
+      "totalTables": 5,
+      "cacheStats": {
+        "cached": 3,
+        "refreshed": 0,
+        "failed": 0
+      },
+      "services": [
+        {
+          "serviceId": "inventory-service",
+          "name": "inventory-service",
+          "branch": "main",
+          "commit": "466e196",
+          "status": "Cached",
+          "apiCount": 6,
+          "tableCount": 2,
+          "dependencyCount": 1,
+          "dependencies": [
+            {
+              "target": "inventory_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] inventory-service: spring-boot service; 6 detected endpoints, 2 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:26.042Z"
+        },
+        {
+          "serviceId": "order-service",
+          "name": "order-service",
+          "branch": "main",
+          "commit": "466e196",
+          "status": "Cached",
+          "apiCount": 6,
+          "tableCount": 2,
+          "dependencyCount": 3,
+          "dependencies": [
+            {
+              "target": "inventory-service",
+              "type": "REST"
+            },
+            {
+              "target": "payment-service",
+              "type": "REST"
+            },
+            {
+              "target": "orders_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] order-service: spring-boot service; 6 detected endpoints, 2 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:26.061Z"
+        },
+        {
+          "serviceId": "payment-service",
+          "name": "payment-service",
+          "branch": "main",
+          "commit": "466e196",
+          "status": "Cached",
+          "apiCount": 6,
+          "tableCount": 1,
+          "dependencyCount": 1,
+          "dependencies": [
+            {
+              "target": "payment_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] payment-service: spring-boot service; 6 detected endpoints, 1 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:26.077Z"
+        }
+      ],
+      "graph": {
+        "nodeCount": 6,
+        "edgeCount": 5,
+        "edges": [
+          {
+            "from": "inventory-service",
+            "to": "db:inventory_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "order-service",
+            "to": "db:orders_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "payment-service",
+            "to": "db:payment_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "order-service",
+            "to": "inventory-service",
+            "type": "SERVICE_DEPENDS_ON_SERVICE"
+          },
+          {
+            "from": "order-service",
+            "to": "payment-service",
+            "type": "SERVICE_DEPENDS_ON_SERVICE"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "get_system_context",
+    "args": {},
+    "result": {
+      "workspaceRoot": "/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/mcp",
+      "serviceCount": 3,
+      "totalApis": 18,
+      "totalTables": 5,
+      "cacheStats": {
+        "cached": 2,
+        "refreshed": 1,
+        "failed": 0
+      },
+      "services": [
+        {
+          "serviceId": "inventory-service",
+          "name": "inventory-service",
+          "branch": "main",
+          "commit": "466e196",
+          "status": "Cached",
+          "apiCount": 6,
+          "tableCount": 2,
+          "dependencyCount": 1,
+          "dependencies": [
+            {
+              "target": "inventory_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] inventory-service: spring-boot service; 6 detected endpoints, 2 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:26.042Z"
+        },
+        {
+          "serviceId": "order-service",
+          "name": "order-service",
+          "branch": "main",
+          "commit": "466e196",
+          "status": "Changed",
+          "apiCount": 6,
+          "tableCount": 2,
+          "dependencyCount": 3,
+          "dependencies": [
+            {
+              "target": "inventory-service",
+              "type": "REST"
+            },
+            {
+              "target": "payment-service",
+              "type": "REST"
+            },
+            {
+              "target": "orders_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] order-service: spring-boot service; 6 detected endpoints, 2 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:26.289Z"
+        },
+        {
+          "serviceId": "payment-service",
+          "name": "payment-service",
+          "branch": "main",
+          "commit": "466e196",
+          "status": "Cached",
+          "apiCount": 6,
+          "tableCount": 1,
+          "dependencyCount": 1,
+          "dependencies": [
+            {
+              "target": "payment_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] payment-service: spring-boot service; 6 detected endpoints, 1 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:26.077Z"
+        }
+      ],
+      "graph": {
+        "nodeCount": 6,
+        "edgeCount": 5,
+        "edges": [
+          {
+            "from": "inventory-service",
+            "to": "db:inventory_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "order-service",
+            "to": "db:orders_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "payment-service",
+            "to": "db:payment_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "order-service",
+            "to": "inventory-service",
+            "type": "SERVICE_DEPENDS_ON_SERVICE"
+          },
+          {
+            "from": "order-service",
+            "to": "payment-service",
+            "type": "SERVICE_DEPENDS_ON_SERVICE"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "get_service_context",
+    "args": {
+      "service": "order-service"
+    },
+    "result": {
+      "identity": {
+        "serviceId": "order-service",
+        "name": "order-service",
+        "branch": "main",
+        "commit": "466e196",
+        "fullCommit": "466e196a6ad71e1ebedc925b5b9643544643fe40",
+        "rootPath": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/mcp/order-service"
+      },
+      "status": "Changed",
+      "analyzedAt": "2026-09-27T10:50:26.380Z",
+      "fileCount": 8,
+      "semanticSummary": "[Deterministic] order-service: spring-boot service; 6 detected endpoints, 2 detected tables.",
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "partial",
+        "events": "unsupported"
+      },
+      "models": [
+        {
+          "name": "OrderRequest",
+          "fields": [
+            {
+              "name": "customerId",
+              "type": "Integer"
+            },
+            {
+              "name": "productId",
+              "type": "UUID"
+            },
+            {
+              "name": "quantity",
+              "type": "Integer"
+            },
+            {
+              "name": "totalAmount",
+              "type": "BigDecimal"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/order/dto/OrderRequest.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "OrderResponse",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID"
+            },
+            {
+              "name": "customerId",
+              "type": "Integer"
+            },
+            {
+              "name": "productId",
+              "type": "UUID"
+            },
+            {
+              "name": "quantity",
+              "type": "Integer"
+            },
+            {
+              "name": "totalAmount",
+              "type": "BigDecimal"
+            },
+            {
+              "name": "status",
+              "type": "String"
+            },
+            {
+              "name": "createdAt",
+              "type": "LocalDateTime"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "Customer",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID"
+            },
+            {
+              "name": "name",
+              "type": "String"
+            },
+            {
+              "name": "email",
+              "type": "String"
+            },
+            {
+              "name": "orders",
+              "type": "java.util.List<Order>"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/order/entity/Customer.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "Order",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID"
+            },
+            {
+              "name": "customerId",
+              "type": "Integer"
+            },
+            {
+              "name": "productId",
+              "type": "UUID"
+            },
+            {
+              "name": "quantity",
+              "type": "Integer"
+            },
+            {
+              "name": "totalAmount",
+              "type": "BigDecimal"
+            },
+            {
+              "name": "status",
+              "type": "String"
+            },
+            {
+              "name": "createdAt",
+              "type": "LocalDateTime"
+            },
+            {
+              "name": "customer",
+              "type": "Customer"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/order/entity/Order.java",
+          "completeness": "partial"
+        }
+      ],
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/orders-v3",
+          "controller": "OrderController",
+          "handler": "getAllOrders",
+          "responseModel": "List<OrderResponse>",
+          "description": "[Deterministic] GET /orders-v3",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/orders-v3/{id}",
+          "controller": "OrderController",
+          "handler": "getOrder",
+          "responseModel": "OrderResponse",
+          "description": "[Deterministic] GET /orders-v3/{id}",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/orders-v3",
+          "controller": "OrderController",
+          "handler": "createOrder",
+          "requestModel": "OrderRequest",
+          "responseModel": "OrderResponse",
+          "description": "[Deterministic] POST /orders-v3",
+          "requestSchema": {
+            "name": "OrderRequest",
+            "fields": [
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderRequest.java",
+            "completeness": "partial"
+          },
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/orders-v3/{id}",
+          "controller": "OrderController",
+          "handler": "updateOrder",
+          "requestModel": "OrderRequest",
+          "responseModel": "OrderResponse",
+          "description": "[Deterministic] PUT /orders-v3/{id}",
+          "requestSchema": {
+            "name": "OrderRequest",
+            "fields": [
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderRequest.java",
+            "completeness": "partial"
+          },
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/orders-v3/{id}",
+          "controller": "OrderController",
+          "handler": "deleteOrder",
+          "responseModel": "Void",
+          "description": "[Deterministic] DELETE /orders-v3/{id}",
+          "requestSchema": null,
+          "responseSchema": null
+        },
+        {
+          "method": "GET",
+          "path": "/orders-v3/customer/{customerId}",
+          "controller": "OrderController",
+          "handler": "getOrdersByCustomer",
+          "responseModel": "List<OrderResponse>",
+          "description": "[Deterministic] GET /orders-v3/customer/{customerId}",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          }
+        }
+      ],
+      "database": [
+        {
+          "table": "customers",
+          "entity": "Customer",
+          "columns": [
+            {
+              "name": "id",
+              "type": "UUID",
+              "pk": true
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR",
+              "pk": false
+            },
+            {
+              "name": "email",
+              "type": "VARCHAR",
+              "pk": false
+            }
+          ],
+          "relationships": []
+        },
+        {
+          "table": "orders",
+          "entity": "Order",
+          "columns": [
+            {
+              "name": "id",
+              "type": "UUID",
+              "pk": true
+            },
+            {
+              "name": "customer_id",
+              "type": "INTEGER",
+              "pk": false
+            },
+            {
+              "name": "product_id",
+              "type": "UUID",
+              "pk": false
+            },
+            {
+              "name": "quantity",
+              "type": "INTEGER",
+              "pk": false
+            },
+            {
+              "name": "total_amount",
+              "type": "DECIMAL",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR",
+              "pk": false
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP",
+              "pk": false
+            }
+          ],
+          "relationships": [
+            {
+              "type": "ManyToOne",
+              "fromEntity": "Order",
+              "toEntity": "Customer",
+              "fieldName": "customer"
+            }
+          ]
+        }
+      ],
+      "dependencies": [
+        {
+          "targetService": "inventory-service",
+          "type": "REST",
+          "evidence": "FeignClient in InventoryClient.java; Configuration reference to inventory-service in application.properties"
+        },
+        {
+          "targetService": "payment-service",
+          "type": "REST",
+          "evidence": "FeignClient in PaymentClient.java; Configuration reference to payment-service in application.properties"
+        },
+        {
+          "targetService": "orders_db",
+          "type": "DATABASE",
+          "evidence": "Detected from datasource configuration"
+        }
+      ],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      }
+    }
+  },
+  {
+    "name": "get_system_context",
+    "args": {},
+    "result": {
+      "workspaceRoot": "/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/mcp",
+      "serviceCount": 3,
+      "totalApis": 18,
+      "totalTables": 5,
+      "cacheStats": {
+        "cached": 2,
+        "refreshed": 1,
+        "failed": 0
+      },
+      "services": [
+        {
+          "serviceId": "inventory-service",
+          "name": "inventory-service",
+          "branch": "main",
+          "commit": "5e12f7e",
+          "status": "Cached",
+          "apiCount": 6,
+          "tableCount": 2,
+          "dependencyCount": 1,
+          "dependencies": [
+            {
+              "target": "inventory_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] inventory-service: spring-boot service; 6 detected endpoints, 2 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:26.519Z"
+        },
+        {
+          "serviceId": "order-service",
+          "name": "order-service",
+          "branch": "main",
+          "commit": "5e12f7e",
+          "status": "Changed",
+          "apiCount": 6,
+          "tableCount": 2,
+          "dependencyCount": 3,
+          "dependencies": [
+            {
+              "target": "inventory-service",
+              "type": "REST"
+            },
+            {
+              "target": "payment-service",
+              "type": "REST"
+            },
+            {
+              "target": "orders_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] order-service: spring-boot service; 6 detected endpoints, 2 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:26.565Z"
+        },
+        {
+          "serviceId": "payment-service",
+          "name": "payment-service",
+          "branch": "main",
+          "commit": "5e12f7e",
+          "status": "Cached",
+          "apiCount": 6,
+          "tableCount": 1,
+          "dependencyCount": 1,
+          "dependencies": [
+            {
+              "target": "payment_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] payment-service: spring-boot service; 6 detected endpoints, 1 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:26.615Z"
+        }
+      ],
+      "graph": {
+        "nodeCount": 6,
+        "edgeCount": 5,
+        "edges": [
+          {
+            "from": "inventory-service",
+            "to": "db:inventory_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "order-service",
+            "to": "db:orders_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "payment-service",
+            "to": "db:payment_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "order-service",
+            "to": "inventory-service",
+            "type": "SERVICE_DEPENDS_ON_SERVICE"
+          },
+          {
+            "from": "order-service",
+            "to": "payment-service",
+            "type": "SERVICE_DEPENDS_ON_SERVICE"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "analyze_change",
+    "args": {
+      "service": "order-service"
+    },
+    "result": {
+      "serviceId": "order-service",
+      "change": {
+        "oldCommit": "466e196",
+        "newCommit": "5e12f7e",
+        "dirtyState": "clean",
+        "changedFileCount": 1,
+        "affectedAreas": {
+          "api": true,
+          "database": false,
+          "dependencies": false
+        },
+        "changedFiles": [
+          {
+            "path": "order-service/src/main/java/com/demo/order/controller/OrderController.java",
+            "category": "API",
+            "changeType": "modified"
+          }
+        ]
+      },
+      "impactReport": {
+        "serviceId": "order-service",
+        "change": "order-service: API changes (1 files, 466e196 → 5e12f7e)",
+        "detectedAt": "2026-09-27T10:50:26.806Z",
+        "impacts": [
+          {
+            "component": "order-service API",
+            "nodeId": "order-service",
+            "componentType": "API",
+            "severity": "MEDIUM",
+            "reason": "REST API contract may have changed, affecting consumers.",
+            "recommendedAction": "Verify API backward compatibility or update version."
+          }
+        ],
+        "reasoningSource": "deterministic",
+        "traversalTruncated": false,
+        "migrationRecommendations": [
+          "4. Update API documentation (OpenAPI/Swagger)",
+          "5. Notify downstream service teams of contract changes",
+          "6. Consider API versioning if backward compatibility cannot be maintained"
+        ],
+        "changeInterpretation": "Detected changes in 1 files affecting API. Direct consumers: 0, transitive: 0."
+      }
+    }
+  },
+  {
+    "name": "refresh_context",
+    "args": {
+      "service": "order-service"
+    },
+    "result": {
+      "message": "Refreshed context for order-service",
+      "stats": {
+        "cached": 2,
+        "refreshed": 1,
+        "failed": 0
+      }
+    }
+  },
+  {
+    "name": "analyze_change",
+    "args": {
+      "service": "order-service"
+    },
+    "result": {
+      "serviceId": "order-service",
+      "change": {
+        "oldCommit": "466e196",
+        "newCommit": "5e12f7e",
+        "dirtyState": "clean",
+        "changedFileCount": 1,
+        "affectedAreas": {
+          "api": true,
+          "database": false,
+          "dependencies": false
+        },
+        "changedFiles": [
+          {
+            "path": "order-service/src/main/java/com/demo/order/controller/OrderController.java",
+            "category": "API",
+            "changeType": "modified"
+          }
+        ]
+      },
+      "impactReport": {
+        "serviceId": "order-service",
+        "change": "order-service: API changes (1 files, 466e196 → 5e12f7e)",
+        "detectedAt": "2026-09-27T10:50:27.188Z",
+        "impacts": [
+          {
+            "component": "order-service API",
+            "nodeId": "order-service",
+            "componentType": "API",
+            "severity": "MEDIUM",
+            "reason": "REST API contract may have changed, affecting consumers.",
+            "recommendedAction": "Verify API backward compatibility or update version."
+          }
+        ],
+        "reasoningSource": "deterministic",
+        "traversalTruncated": false,
+        "migrationRecommendations": [
+          "4. Update API documentation (OpenAPI/Swagger)",
+          "5. Notify downstream service teams of contract changes",
+          "6. Consider API versioning if backward compatibility cannot be maintained"
+        ],
+        "changeInterpretation": "Detected changes in 1 files affecting API. Direct consumers: 0, transitive: 0."
+      }
+    }
+  },
+  {
+    "name": "analyze_change",
+    "args": {
+      "service": "order-service"
+    },
+    "result": {
+      "serviceId": "order-service",
+      "change": {
+        "oldCommit": "466e196",
+        "newCommit": "5e12f7e",
+        "dirtyState": "clean",
+        "changedFileCount": 1,
+        "affectedAreas": {
+          "api": true,
+          "database": false,
+          "dependencies": false
+        },
+        "changedFiles": [
+          {
+            "path": "order-service/src/main/java/com/demo/order/controller/OrderController.java",
+            "category": "API",
+            "changeType": "modified"
+          }
+        ]
+      },
+      "impactReport": {
+        "serviceId": "order-service",
+        "change": "order-service: API changes (1 files, 466e196 → 5e12f7e)",
+        "detectedAt": "2026-09-27T10:50:27.500Z",
+        "impacts": [
+          {
+            "component": "order-service API",
+            "nodeId": "order-service",
+            "componentType": "API",
+            "severity": "MEDIUM",
+            "reason": "REST API contract may have changed, affecting consumers.",
+            "recommendedAction": "Verify API backward compatibility or update version."
+          }
+        ],
+        "reasoningSource": "deterministic",
+        "traversalTruncated": false,
+        "migrationRecommendations": [
+          "4. Update API documentation (OpenAPI/Swagger)",
+          "5. Notify downstream service teams of contract changes",
+          "6. Consider API versioning if backward compatibility cannot be maintained"
+        ],
+        "changeInterpretation": "Detected changes in 1 files affecting API. Direct consumers: 0, transitive: 0."
+      }
+    }
+  },
+  {
+    "name": "analyze_change",
+    "args": {
+      "service": "inventory-service"
+    },
+    "result": {
+      "serviceId": "inventory-service",
+      "status": "No changes",
+      "message": "No changes detected in this service."
+    }
+  },
+  {
+    "name": "get_service_context",
+    "args": {
+      "service": "service"
+    },
+    "error": "McpError: MCP error -32602: MCP error -32602: Ambiguous service name \"service\". Matching candidates: [inventory-service, order-service, payment-service]. Please use an exact service ID."
+  },
+  {
+    "name": "get_service_context",
+    "args": {
+      "service": "order-service"
+    },
+    "error": "McpError: MCP error -32602: MCP error -32602: Ambiguous service: team-a/order-service, team-b/order-service"
+  },
+  {
+    "name": "get_system_context",
+    "args": {},
+    "result": {
+      "workspaceRoot": "/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/mcp-nongit",
+      "serviceCount": 3,
+      "totalApis": 18,
+      "totalTables": 5,
+      "cacheStats": {
+        "cached": 0,
+        "refreshed": 3,
+        "failed": 0
+      },
+      "services": [
+        {
+          "serviceId": "inventory-service",
+          "name": "inventory-service",
+          "branch": "main",
+          "commit": "unknown",
+          "status": "Indexed",
+          "apiCount": 6,
+          "tableCount": 2,
+          "dependencyCount": 1,
+          "dependencies": [
+            {
+              "target": "inventory_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] inventory-service: spring-boot service; 6 detected endpoints, 2 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:28.292Z"
+        },
+        {
+          "serviceId": "order-service",
+          "name": "order-service",
+          "branch": "main",
+          "commit": "unknown",
+          "status": "Indexed",
+          "apiCount": 6,
+          "tableCount": 2,
+          "dependencyCount": 3,
+          "dependencies": [
+            {
+              "target": "inventory-service",
+              "type": "REST"
+            },
+            {
+              "target": "payment-service",
+              "type": "REST"
+            },
+            {
+              "target": "orders_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] order-service: spring-boot service; 6 detected endpoints, 2 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:28.297Z"
+        },
+        {
+          "serviceId": "payment-service",
+          "name": "payment-service",
+          "branch": "main",
+          "commit": "unknown",
+          "status": "Indexed",
+          "apiCount": 6,
+          "tableCount": 1,
+          "dependencyCount": 1,
+          "dependencies": [
+            {
+              "target": "payment_db",
+              "type": "DATABASE"
+            }
+          ],
+          "semanticSummary": "[Deterministic] payment-service: spring-boot service; 6 detected endpoints, 1 detected tables.",
+          "analyzedAt": "2026-09-27T10:50:28.300Z"
+        }
+      ],
+      "graph": {
+        "nodeCount": 6,
+        "edgeCount": 5,
+        "edges": [
+          {
+            "from": "inventory-service",
+            "to": "db:inventory_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "order-service",
+            "to": "db:orders_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "payment-service",
+            "to": "db:payment_db",
+            "type": "SERVICE_USES_DATABASE"
+          },
+          {
+            "from": "order-service",
+            "to": "inventory-service",
+            "type": "SERVICE_DEPENDS_ON_SERVICE"
+          },
+          {
+            "from": "order-service",
+            "to": "payment-service",
+            "type": "SERVICE_DEPENDS_ON_SERVICE"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "get_service_context",
+    "args": {
+      "service": "order-service"
+    },
+    "result": {
+      "identity": {
+        "serviceId": "order-service",
+        "name": "order-service",
+        "branch": "main",
+        "commit": "unknown",
+        "fullCommit": "unknown",
+        "rootPath": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/mcp-nongit/order-service"
+      },
+      "status": "Indexed",
+      "analyzedAt": "2026-09-27T10:50:28.363Z",
+      "fileCount": 8,
+      "semanticSummary": "[Deterministic] order-service: spring-boot service; 6 detected endpoints, 2 detected tables.",
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "partial",
+        "events": "unsupported"
+      },
+      "models": [
+        {
+          "name": "OrderRequest",
+          "fields": [
+            {
+              "name": "customerId",
+              "type": "Integer"
+            },
+            {
+              "name": "productId",
+              "type": "UUID"
+            },
+            {
+              "name": "quantity",
+              "type": "Integer"
+            },
+            {
+              "name": "totalAmount",
+              "type": "BigDecimal"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/order/dto/OrderRequest.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "OrderResponse",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID"
+            },
+            {
+              "name": "customerId",
+              "type": "Integer"
+            },
+            {
+              "name": "productId",
+              "type": "UUID"
+            },
+            {
+              "name": "quantity",
+              "type": "Integer"
+            },
+            {
+              "name": "totalAmount",
+              "type": "BigDecimal"
+            },
+            {
+              "name": "status",
+              "type": "String"
+            },
+            {
+              "name": "createdAt",
+              "type": "LocalDateTime"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "Customer",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID"
+            },
+            {
+              "name": "name",
+              "type": "String"
+            },
+            {
+              "name": "email",
+              "type": "String"
+            },
+            {
+              "name": "orders",
+              "type": "java.util.List<Order>"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/order/entity/Customer.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "Order",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID"
+            },
+            {
+              "name": "customerId",
+              "type": "Integer"
+            },
+            {
+              "name": "productId",
+              "type": "UUID"
+            },
+            {
+              "name": "quantity",
+              "type": "Integer"
+            },
+            {
+              "name": "totalAmount",
+              "type": "BigDecimal"
+            },
+            {
+              "name": "status",
+              "type": "String"
+            },
+            {
+              "name": "createdAt",
+              "type": "LocalDateTime"
+            },
+            {
+              "name": "customer",
+              "type": "Customer"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/order/entity/Order.java",
+          "completeness": "partial"
+        }
+      ],
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/orders-new",
+          "controller": "OrderController",
+          "handler": "getAllOrders",
+          "responseModel": "List<OrderResponse>",
+          "description": "[Deterministic] GET /orders-new",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/orders-new/{id}",
+          "controller": "OrderController",
+          "handler": "getOrder",
+          "responseModel": "OrderResponse",
+          "description": "[Deterministic] GET /orders-new/{id}",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/orders-new",
+          "controller": "OrderController",
+          "handler": "createOrder",
+          "requestModel": "OrderRequest",
+          "responseModel": "OrderResponse",
+          "description": "[Deterministic] POST /orders-new",
+          "requestSchema": {
+            "name": "OrderRequest",
+            "fields": [
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderRequest.java",
+            "completeness": "partial"
+          },
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/orders-new/{id}",
+          "controller": "OrderController",
+          "handler": "updateOrder",
+          "requestModel": "OrderRequest",
+          "responseModel": "OrderResponse",
+          "description": "[Deterministic] PUT /orders-new/{id}",
+          "requestSchema": {
+            "name": "OrderRequest",
+            "fields": [
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderRequest.java",
+            "completeness": "partial"
+          },
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/orders-new/{id}",
+          "controller": "OrderController",
+          "handler": "deleteOrder",
+          "responseModel": "Void",
+          "description": "[Deterministic] DELETE /orders-new/{id}",
+          "requestSchema": null,
+          "responseSchema": null
+        },
+        {
+          "method": "GET",
+          "path": "/orders-new/customer/{customerId}",
+          "controller": "OrderController",
+          "handler": "getOrdersByCustomer",
+          "responseModel": "List<OrderResponse>",
+          "description": "[Deterministic] GET /orders-new/customer/{customerId}",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          }
+        }
+      ],
+      "database": [
+        {
+          "table": "customers",
+          "entity": "Customer",
+          "columns": [
+            {
+              "name": "id",
+              "type": "UUID",
+              "pk": true
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR",
+              "pk": false
+            },
+            {
+              "name": "email",
+              "type": "VARCHAR",
+              "pk": false
+            }
+          ],
+          "relationships": []
+        },
+        {
+          "table": "orders",
+          "entity": "Order",
+          "columns": [
+            {
+              "name": "id",
+              "type": "UUID",
+              "pk": true
+            },
+            {
+              "name": "customer_id",
+              "type": "INTEGER",
+              "pk": false
+            },
+            {
+              "name": "product_id",
+              "type": "UUID",
+              "pk": false
+            },
+            {
+              "name": "quantity",
+              "type": "INTEGER",
+              "pk": false
+            },
+            {
+              "name": "total_amount",
+              "type": "DECIMAL",
+              "pk": false
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR",
+              "pk": false
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP",
+              "pk": false
+            }
+          ],
+          "relationships": [
+            {
+              "type": "ManyToOne",
+              "fromEntity": "Order",
+              "toEntity": "Customer",
+              "fieldName": "customer"
+            }
+          ]
+        }
+      ],
+      "dependencies": [
+        {
+          "targetService": "inventory-service",
+          "type": "REST",
+          "evidence": "FeignClient in InventoryClient.java; Configuration reference to inventory-service in application.properties"
+        },
+        {
+          "targetService": "payment-service",
+          "type": "REST",
+          "evidence": "FeignClient in PaymentClient.java; Configuration reference to payment-service in application.properties"
+        },
+        {
+          "targetService": "orders_db",
+          "type": "DATABASE",
+          "evidence": "Detected from datasource configuration"
+        }
+      ],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      }
+    }
+  }
+]

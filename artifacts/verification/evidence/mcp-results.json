@@ -1,0 +1,280 @@
+[
+  {
+    "id": "M01",
+    "name": "Four tools available",
+    "status": "PASS",
+    "actual": [
+      "get_system_context",
+      "get_service_context",
+      "analyze_change",
+      "refresh_context"
+    ]
+  },
+  {
+    "id": "M02",
+    "name": "3 services and 18 APIs",
+    "status": "PASS",
+    "actual": {
+      "cached": 0,
+      "refreshed": 3,
+      "failed": 0
+    }
+  },
+  {
+    "id": "M-warm",
+    "name": "Unchanged query reports cached:3",
+    "status": "PASS",
+    "actual": {
+      "cached": 3,
+      "refreshed": 0,
+      "failed": 0
+    }
+  },
+  {
+    "id": "M-dirty",
+    "name": "Unstaged edit shows Changed",
+    "status": "PASS",
+    "actual": [
+      [
+        "inventory-service",
+        "Cached"
+      ],
+      [
+        "order-service",
+        "Changed"
+      ],
+      [
+        "payment-service",
+        "Cached"
+      ]
+    ]
+  },
+  {
+    "id": "M-dirty2",
+    "name": "Second edit refreshes path",
+    "status": "PASS",
+    "actual": [
+      "/orders-v3",
+      "/orders-v3/{id}",
+      "/orders-v3",
+      "/orders-v3/{id}",
+      "/orders-v3/{id}",
+      "/orders-v3/customer/{customerId}"
+    ]
+  },
+  {
+    "id": "F04",
+    "name": "MCP sees new HEAD",
+    "status": "PASS",
+    "actual": [
+      "5e12f7e",
+      "5e12f7e",
+      "5e12f7e"
+    ]
+  },
+  {
+    "id": "M-impact",
+    "name": "Committed change produces impact report",
+    "status": "PASS",
+    "actual": {
+      "serviceId": "order-service",
+      "change": {
+        "oldCommit": "466e196",
+        "newCommit": "5e12f7e",
+        "dirtyState": "clean",
+        "changedFileCount": 1,
+        "affectedAreas": {
+          "api": true,
+          "database": false,
+          "dependencies": false
+        },
+        "changedFiles": [
+          {
+            "path": "order-service/src/main/java/com/demo/order/controller/OrderController.java",
+            "category": "API",
+            "changeType": "modified"
+          }
+        ]
+      },
+      "impactReport": {
+        "serviceId": "order-service",
+        "change": "order-service: API changes (1 files, 466e196 → 5e12f7e)",
+        "detectedAt": "2026-09-27T10:50:26.806Z",
+        "impacts": [
+          {
+            "component": "order-service API",
+            "nodeId": "order-service",
+            "componentType": "API",
+            "severity": "MEDIUM",
+            "reason": "REST API contract may have changed, affecting consumers.",
+            "recommendedAction": "Verify API backward compatibility or update version."
+          }
+        ],
+        "reasoningSource": "deterministic",
+        "traversalTruncated": false,
+        "migrationRecommendations": [
+          "4. Update API documentation (OpenAPI/Swagger)",
+          "5. Notify downstream service teams of contract changes",
+          "6. Consider API versioning if backward compatibility cannot be maintained"
+        ],
+        "changeInterpretation": "Detected changes in 1 files affecting API. Direct consumers: 0, transitive: 0."
+      }
+    }
+  },
+  {
+    "id": "F05",
+    "name": "Targeted MCP refresh caches other services",
+    "status": "PASS",
+    "actual": {
+      "message": "Refreshed context for order-service",
+      "stats": {
+        "cached": 2,
+        "refreshed": 1,
+        "failed": 0
+      }
+    }
+  },
+  {
+    "id": "M-impact-refresh",
+    "name": "Impact survives targeted refresh",
+    "status": "PASS",
+    "actual": {
+      "serviceId": "order-service",
+      "change": {
+        "oldCommit": "466e196",
+        "newCommit": "5e12f7e",
+        "dirtyState": "clean",
+        "changedFileCount": 1,
+        "affectedAreas": {
+          "api": true,
+          "database": false,
+          "dependencies": false
+        },
+        "changedFiles": [
+          {
+            "path": "order-service/src/main/java/com/demo/order/controller/OrderController.java",
+            "category": "API",
+            "changeType": "modified"
+          }
+        ]
+      },
+      "impactReport": {
+        "serviceId": "order-service",
+        "change": "order-service: API changes (1 files, 466e196 → 5e12f7e)",
+        "detectedAt": "2026-09-27T10:50:27.188Z",
+        "impacts": [
+          {
+            "component": "order-service API",
+            "nodeId": "order-service",
+            "componentType": "API",
+            "severity": "MEDIUM",
+            "reason": "REST API contract may have changed, affecting consumers.",
+            "recommendedAction": "Verify API backward compatibility or update version."
+          }
+        ],
+        "reasoningSource": "deterministic",
+        "traversalTruncated": false,
+        "migrationRecommendations": [
+          "4. Update API documentation (OpenAPI/Swagger)",
+          "5. Notify downstream service teams of contract changes",
+          "6. Consider API versioning if backward compatibility cannot be maintained"
+        ],
+        "changeInterpretation": "Detected changes in 1 files affecting API. Direct consumers: 0, transitive: 0."
+      }
+    }
+  },
+  {
+    "id": "M-restart",
+    "name": "Impact survives process restart",
+    "status": "PASS",
+    "actual": {
+      "serviceId": "order-service",
+      "change": {
+        "oldCommit": "466e196",
+        "newCommit": "5e12f7e",
+        "dirtyState": "clean",
+        "changedFileCount": 1,
+        "affectedAreas": {
+          "api": true,
+          "database": false,
+          "dependencies": false
+        },
+        "changedFiles": [
+          {
+            "path": "order-service/src/main/java/com/demo/order/controller/OrderController.java",
+            "category": "API",
+            "changeType": "modified"
+          }
+        ]
+      },
+      "impactReport": {
+        "serviceId": "order-service",
+        "change": "order-service: API changes (1 files, 466e196 → 5e12f7e)",
+        "detectedAt": "2026-09-27T10:50:27.500Z",
+        "impacts": [
+          {
+            "component": "order-service API",
+            "nodeId": "order-service",
+            "componentType": "API",
+            "severity": "MEDIUM",
+            "reason": "REST API contract may have changed, affecting consumers.",
+            "recommendedAction": "Verify API backward compatibility or update version."
+          }
+        ],
+        "reasoningSource": "deterministic",
+        "traversalTruncated": false,
+        "migrationRecommendations": [
+          "4. Update API documentation (OpenAPI/Swagger)",
+          "5. Notify downstream service teams of contract changes",
+          "6. Consider API versioning if backward compatibility cannot be maintained"
+        ],
+        "changeInterpretation": "Detected changes in 1 files affecting API. Direct consumers: 0, transitive: 0."
+      }
+    }
+  },
+  {
+    "id": "M-unchanged",
+    "name": "No fabricated impact on untouched service",
+    "status": "PASS",
+    "actual": {
+      "serviceId": "inventory-service",
+      "status": "No changes",
+      "message": "No changes detected in this service."
+    }
+  },
+  {
+    "id": "F23-partial",
+    "name": "Ambiguous partial lookup rejected",
+    "status": "PASS",
+    "actual": {
+      "error": "McpError: MCP error -32602: MCP error -32602: Ambiguous service name \"service\". Matching candidates: [inventory-service, order-service, payment-service]. Please use an exact service ID."
+    }
+  },
+  {
+    "id": "F06",
+    "name": "No non-JSON protocol errors",
+    "status": "PASS",
+    "actual": []
+  },
+  {
+    "id": "F23-exact",
+    "name": "Duplicate exact names rejected",
+    "status": "PASS",
+    "actual": {
+      "error": "McpError: MCP error -32602: MCP error -32602: Ambiguous service: team-a/order-service, team-b/order-service"
+    }
+  },
+  {
+    "id": "F10-MCP",
+    "name": "Non-git MCP query refreshes content",
+    "status": "PASS",
+    "actual": [
+      "/orders-new",
+      "/orders-new/{id}",
+      "/orders-new",
+      "/orders-new/{id}",
+      "/orders-new/{id}",
+      "/orders-new/customer/{customerId}"
+    ]
+  }
+]

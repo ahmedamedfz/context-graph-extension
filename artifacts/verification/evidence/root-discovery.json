@@ -1,0 +1,82 @@
+[
+  {
+    "serviceId": "context-graph-extension",
+    "name": "context-graph-extension",
+    "rootPath": "/Users/ahmadfariz/Projects/github/context-graph-extension",
+    "repository": "/Users/ahmadfariz/Projects/github/context-graph-extension",
+    "branch": "main",
+    "commitHash": "124ec0d226f94b11f1f5cd6ef9a62e96b954e3ed",
+    "isGitRepo": true,
+    "detectedStack": "node"
+  },
+  {
+    "serviceId": "demo/microservices/inventory-service",
+    "name": "inventory-service",
+    "rootPath": "/Users/ahmadfariz/Projects/github/context-graph-extension/demo/microservices/inventory-service",
+    "repository": "/Users/ahmadfariz/Projects/github/context-graph-extension",
+    "branch": "main",
+    "commitHash": "124ec0d226f94b11f1f5cd6ef9a62e96b954e3ed",
+    "isGitRepo": true,
+    "detectedStack": "spring-boot"
+  },
+  {
+    "serviceId": "demo/microservices/order-service",
+    "name": "order-service",
+    "rootPath": "/Users/ahmadfariz/Projects/github/context-graph-extension/demo/microservices/order-service",
+    "repository": "/Users/ahmadfariz/Projects/github/context-graph-extension",
+    "branch": "main",
+    "commitHash": "124ec0d226f94b11f1f5cd6ef9a62e96b954e3ed",
+    "isGitRepo": true,
+    "detectedStack": "spring-boot"
+  },
+  {
+    "serviceId": "demo/microservices/payment-service",
+    "name": "payment-service",
+    "rootPath": "/Users/ahmadfariz/Projects/github/context-graph-extension/demo/microservices/payment-service",
+    "repository": "/Users/ahmadfariz/Projects/github/context-graph-extension",
+    "branch": "main",
+    "commitHash": "124ec0d226f94b11f1f5cd6ef9a62e96b954e3ed",
+    "isGitRepo": true,
+    "detectedStack": "spring-boot"
+  },
+  {
+    "serviceId": "packages/core",
+    "name": "core",
+    "rootPath": "/Users/ahmadfariz/Projects/github/context-graph-extension/packages/core",
+    "repository": "/Users/ahmadfariz/Projects/github/context-graph-extension",
+    "branch": "main",
+    "commitHash": "124ec0d226f94b11f1f5cd6ef9a62e96b954e3ed",
+    "isGitRepo": true,
+    "detectedStack": "node"
+  },
+  {
+    "serviceId": "packages/mcp-server",
+    "name": "mcp-server",
+    "rootPath": "/Users/ahmadfariz/Projects/github/context-graph-extension/packages/mcp-server",
+    "repository": "/Users/ahmadfariz/Projects/github/context-graph-extension",
+    "branch": "main",
+    "commitHash": "124ec0d226f94b11f1f5cd6ef9a62e96b954e3ed",
+    "isGitRepo": true,
+    "detectedStack": "node"
+  },
+  {
+    "serviceId": "packages/vscode-extension",
+    "name": "vscode-extension",
+    "rootPath": "/Users/ahmadfariz/Projects/github/context-graph-extension/packages/vscode-extension",
+    "repository": "/Users/ahmadfariz/Projects/github/context-graph-extension",
+    "branch": "main",
+    "commitHash": "124ec0d226f94b11f1f5cd6ef9a62e96b954e3ed",
+    "isGitRepo": true,
+    "detectedStack": "node"
+  },
+  {
+    "serviceId": "packages/watsonx",
+    "name": "watsonx",
+    "rootPath": "/Users/ahmadfariz/Projects/github/context-graph-extension/packages/watsonx",
+    "repository": "/Users/ahmadfariz/Projects/github/context-graph-extension",
+    "branch": "main",
+    "commitHash": "124ec0d226f94b11f1f5cd6ef9a62e96b954e3ed",
+    "isGitRepo": true,
+    "detectedStack": "node"
+  }
+]

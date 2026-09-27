@@ -1,0 +1,554 @@
+[
+  {
+    "id": "F01",
+    "name": "Root discovers bundled Spring demo",
+    "status": "PASS",
+    "actual": [
+      [
+        "context-graph-extension",
+        "node"
+      ],
+      [
+        "demo/microservices/inventory-service",
+        "spring-boot"
+      ],
+      [
+        "demo/microservices/order-service",
+        "spring-boot"
+      ],
+      [
+        "demo/microservices/payment-service",
+        "spring-boot"
+      ],
+      [
+        "packages/core",
+        "node"
+      ],
+      [
+        "packages/mcp-server",
+        "node"
+      ],
+      [
+        "packages/vscode-extension",
+        "node"
+      ],
+      [
+        "packages/watsonx",
+        "node"
+      ]
+    ]
+  },
+  {
+    "id": "DEMO",
+    "name": "3 services / 18 APIs / 5 tables / 3 databases",
+    "status": "PASS",
+    "actual": {
+      "services": 3,
+      "apis": 18,
+      "tables": 5,
+      "dbs": 3
+    }
+  },
+  {
+    "id": "GRAPH",
+    "name": "2 service dependency edges",
+    "status": "PASS",
+    "actual": [
+      {
+        "id": "inventory-service->db:inventory_db",
+        "type": "SERVICE_USES_DATABASE",
+        "source": "inventory-service",
+        "target": "db:inventory_db",
+        "label": "uses"
+      },
+      {
+        "id": "order-service->db:orders_db",
+        "type": "SERVICE_USES_DATABASE",
+        "source": "order-service",
+        "target": "db:orders_db",
+        "label": "uses"
+      },
+      {
+        "id": "payment-service->db:payment_db",
+        "type": "SERVICE_USES_DATABASE",
+        "source": "payment-service",
+        "target": "db:payment_db",
+        "label": "uses"
+      },
+      {
+        "id": "order-service->inventory-service",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "order-service",
+        "target": "inventory-service",
+        "label": "depends on"
+      },
+      {
+        "id": "order-service->payment-service",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "order-service",
+        "target": "payment-service",
+        "label": "depends on"
+      }
+    ]
+  },
+  {
+    "id": "CACHE",
+    "name": "Warm engine uses all three caches",
+    "status": "PASS",
+    "actual": {
+      "cached": 3,
+      "refreshed": 0,
+      "failed": 0
+    }
+  },
+  {
+    "id": "F03-before",
+    "name": "Impact works before explicit refresh",
+    "status": "PASS",
+    "actual": {
+      "serviceId": "order-service",
+      "fieldChanges": [
+        {
+          "file": "order-service/src/main/java/com/demo/order/entity/Order.java",
+          "field": "customerId",
+          "before": "Integer",
+          "after": "UUID",
+          "category": "ENTITY"
+        }
+      ],
+      "oldCommit": "c833661cdb230521aa3803fa401f7314c3ec7cca",
+      "newCommit": "6dc1843129044bf7fd1bbaf544ba31a1a7543737",
+      "changedFiles": [
+        {
+          "path": "order-service/src/main/java/com/demo/order/entity/Order.java",
+          "category": "ENTITY",
+          "changeType": "modified"
+        }
+      ],
+      "affectsApi": false,
+      "affectsDatabase": true,
+      "affectsDependencies": false
+    }
+  },
+  {
+    "id": "F02",
+    "name": "Commit refreshes 1 / caches 2",
+    "status": "PASS",
+    "actual": {
+      "cached": 2,
+      "refreshed": 1,
+      "failed": 0
+    }
+  },
+  {
+    "id": "F03-after",
+    "name": "Impact works after analysis",
+    "status": "PASS",
+    "actual": {
+      "serviceId": "order-service",
+      "fieldChanges": [
+        {
+          "file": "order-service/src/main/java/com/demo/order/entity/Order.java",
+          "field": "customerId",
+          "before": "Integer",
+          "after": "UUID",
+          "category": "ENTITY"
+        }
+      ],
+      "oldCommit": "c833661cdb230521aa3803fa401f7314c3ec7cca",
+      "newCommit": "6dc1843129044bf7fd1bbaf544ba31a1a7543737",
+      "changedFiles": [
+        {
+          "path": "order-service/src/main/java/com/demo/order/entity/Order.java",
+          "category": "ENTITY",
+          "changeType": "modified"
+        }
+      ],
+      "affectsApi": false,
+      "affectsDatabase": true,
+      "affectsDependencies": false
+    }
+  },
+  {
+    "id": "F13-facts",
+    "name": "Impact prompt includes field before/after types",
+    "status": "PASS",
+    "actual": [
+      "You are a software architect analyzing the impact of a code change.\n\nCHANGE:\norder-service: database schema changes (1 files, c833661 → 6dc1843)\norder-service/src/main/java/com/demo/order/entity/Order.java: customerId: Integer → UUID\n\nCHANGED SERVICE: order-service\nAPIs: GET /orders, GET /orders/{id}, POST /orders, PUT /orders/{id}, DELETE /orders/{id}, GET /orders/customer/{customerId}\nDatabase tables: customers, orders\n\nRELATED SERVICES:\n- inventory-service: APIs=[GET /inventory, GET /inventory/{productId}, GET /inventory/{productId}/check] depends_on=[inventory_db]\n- payment-service: APIs=[POST /payments/process, GET /payments/{id}, GET /payments/order/{orderId}] depends_on=[payment_db]\n\nAnalyze the blast radius of this change. For each affected component, provide:\n- severity (HIGH/MEDIUM/LOW)\n- reason (specific technical explanation)\n- recommendedAction\n\nRespond with JSON:\n```json\n{\n  \"interpretation\": \"brief change description\",\n  \"impacts\": [\n    {\n      \"component\": \"service-name\",\n      \"componentType\": \"SERVICE\",\n      \"severity\": \"HIGH\",\n      \"reason\": \"why this is affected\",\n      \"recommendedAction\": \"what to do\"\n    }\n  ],\n  \"migrationRecommendations\": [\"step1\", \"step2\"]\n}\n```"
+    ]
+  },
+  {
+    "id": "F03-refresh",
+    "name": "Targeted refresh preserves impact baseline",
+    "status": "PASS",
+    "actual": {
+      "serviceId": "order-service",
+      "fieldChanges": [
+        {
+          "file": "order-service/src/main/java/com/demo/order/entity/Order.java",
+          "field": "customerId",
+          "before": "Integer",
+          "after": "UUID",
+          "category": "ENTITY"
+        }
+      ],
+      "oldCommit": "c833661cdb230521aa3803fa401f7314c3ec7cca",
+      "newCommit": "6dc1843129044bf7fd1bbaf544ba31a1a7543737",
+      "changedFiles": [
+        {
+          "path": "order-service/src/main/java/com/demo/order/entity/Order.java",
+          "category": "ENTITY",
+          "changeType": "modified"
+        }
+      ],
+      "affectsApi": false,
+      "affectsDatabase": true,
+      "affectsDependencies": false
+    }
+  },
+  {
+    "id": "F08",
+    "name": "DB rename replaces old DB dependency",
+    "status": "PASS",
+    "actual": [
+      {
+        "targetService": "inventory-service",
+        "type": "REST",
+        "evidence": "FeignClient in InventoryClient.java; Configuration reference to inventory-service in application.properties"
+      },
+      {
+        "targetService": "payment-service",
+        "type": "REST",
+        "evidence": "FeignClient in PaymentClient.java; Configuration reference to payment-service in application.properties"
+      },
+      {
+        "targetService": "orders_v2",
+        "type": "DATABASE",
+        "evidence": "Detected from datasource configuration"
+      }
+    ]
+  },
+  {
+    "id": "BRANCH",
+    "name": "Fingerprint cache reflects new branch at same HEAD",
+    "status": "PASS",
+    "actual": [
+      "qa-branch",
+      "qa-branch",
+      "qa-branch"
+    ]
+  },
+  {
+    "id": "DIRTY-path",
+    "name": "Unstaged path matches actual relative file",
+    "status": "PASS",
+    "actual": [
+      {
+        "path": "order-service/src/main/java/com/demo/order/controller/OrderController.java",
+        "category": "API",
+        "changeType": "modified"
+      }
+    ]
+  },
+  {
+    "id": "DIRTY-first",
+    "name": "Unstaged controller edit refreshes API",
+    "status": "PASS",
+    "actual": {
+      "status": "Changed",
+      "paths": [
+        "/orders-v2",
+        "/orders-v2/{id}",
+        "/orders-v2",
+        "/orders-v2/{id}",
+        "/orders-v2/{id}",
+        "/orders-v2/customer/{customerId}"
+      ]
+    }
+  },
+  {
+    "id": "DIRTY-hash",
+    "name": "Second edit of same file changes dirty hash",
+    "status": "PASS",
+    "actual": {
+      "h1": "ad9cdf437dec50572d55",
+      "h2": "ec303d65e9990fa1040e"
+    }
+  },
+  {
+    "id": "DIRTY-second",
+    "name": "Second unstaged edit appears in APIs",
+    "status": "PASS",
+    "actual": {
+      "status": "Changed",
+      "paths": [
+        "/orders-v3",
+        "/orders-v3/{id}",
+        "/orders-v3",
+        "/orders-v3/{id}",
+        "/orders-v3/{id}",
+        "/orders-v3/customer/{customerId}"
+      ]
+    }
+  },
+  {
+    "id": "DIRTY-stage",
+    "name": "Staged edit is detected",
+    "status": "PASS",
+    "actual": "Cached"
+  },
+  {
+    "id": "DIRTY-impact",
+    "name": "Dirty impact available after initial clean baseline",
+    "status": "PASS",
+    "actual": {
+      "serviceId": "order-service",
+      "fieldChanges": [],
+      "oldCommit": "56e61dca81a12fe92ec5643b296d0ee910c00907",
+      "newCommit": "56e61dca81a12fe92ec5643b296d0ee910c00907",
+      "changedFiles": [
+        {
+          "path": "order-service/src/main/java/com/demo/order/controller/OrderController.java",
+          "category": "API",
+          "changeType": "modified"
+        }
+      ],
+      "affectsApi": true,
+      "affectsDatabase": false,
+      "affectsDependencies": false
+    }
+  },
+  {
+    "id": "DIRTY-restore",
+    "name": "Restore returns clean cache",
+    "status": "PASS",
+    "actual": {
+      "cached": 3,
+      "refreshed": 0,
+      "failed": 0
+    }
+  },
+  {
+    "id": "F07",
+    "name": "Exposed DTO sets affectsApi after analysis",
+    "status": "PASS",
+    "actual": {
+      "serviceId": "order-service",
+      "fieldChanges": [
+        {
+          "file": "order-service/src/main/java/com/demo/order/dto/OrderRequest.java",
+          "field": "customerId",
+          "before": "Integer",
+          "after": "UUID",
+          "category": "DTO"
+        }
+      ],
+      "oldCommit": "28f5ce6952840aaf25154394a826997b04fe14c7",
+      "newCommit": "22b7468a936d72587fdb8c2c4c86c6c24f3ad513",
+      "changedFiles": [
+        {
+          "path": "order-service/src/main/java/com/demo/order/dto/OrderRequest.java",
+          "category": "DTO",
+          "changeType": "modified"
+        }
+      ],
+      "affectsApi": true,
+      "affectsDatabase": false,
+      "affectsDependencies": false
+    }
+  },
+  {
+    "id": "F10-engine",
+    "name": "Non-git engine updates source",
+    "status": "PASS",
+    "actual": {
+      "cached": 0,
+      "refreshed": 3,
+      "failed": 0
+    }
+  },
+  {
+    "id": "F11-sequential",
+    "name": "Second cache instance sees first writer",
+    "status": "PASS",
+    "actual": "unknown"
+  },
+  {
+    "id": "CACHE-schema",
+    "name": "Old schema entries invalidated",
+    "status": "PASS",
+    "actual": "schemaVersion=0"
+  },
+  {
+    "id": "F13-api",
+    "name": "describeApi called for all 18 endpoints",
+    "status": "PASS",
+    "actual": {
+      "summary": 3,
+      "api": 18
+    }
+  },
+  {
+    "id": "POLYGLOT",
+    "name": "12 application services discovered",
+    "status": "PASS",
+    "actual": [
+      {
+        "name": "ai",
+        "stack": "python",
+        "apis": 3
+      },
+      {
+        "name": "audit",
+        "stack": "php",
+        "apis": 3
+      },
+      {
+        "name": "cart",
+        "stack": "go",
+        "apis": 4
+      },
+      {
+        "name": "catalog",
+        "stack": "python",
+        "apis": 3
+      },
+      {
+        "name": "gateway",
+        "stack": "node",
+        "apis": 16
+      },
+      {
+        "name": "inventory",
+        "stack": "go",
+        "apis": 2
+      },
+      {
+        "name": "notifications",
+        "stack": "node",
+        "apis": 3
+      },
+      {
+        "name": "orders",
+        "stack": "python",
+        "apis": 3
+      },
+      {
+        "name": "payment",
+        "stack": "java",
+        "apis": 2
+      },
+      {
+        "name": "pricing",
+        "stack": "java",
+        "apis": 2
+      },
+      {
+        "name": "shipping",
+        "stack": "php",
+        "apis": 2
+      },
+      {
+        "name": "storefront",
+        "stack": "node",
+        "apis": 4
+      }
+    ]
+  },
+  {
+    "id": "POLY-node",
+    "name": "Committed node route refreshes",
+    "status": "PASS",
+    "actual": {
+      "before": [
+        {
+          "method": "GET",
+          "path": "/old",
+          "controller": "api",
+          "handlerMethod": "anonymous",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /old"
+        }
+      ],
+      "after": [
+        {
+          "method": "GET",
+          "path": "/new",
+          "controller": "api",
+          "handlerMethod": "anonymous",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /new"
+        }
+      ]
+    }
+  },
+  {
+    "id": "POLY-python",
+    "name": "Committed python route refreshes",
+    "status": "PASS",
+    "actual": {
+      "before": [
+        {
+          "method": "GET",
+          "path": "/old",
+          "controller": "api",
+          "handlerMethod": "old",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /old"
+        }
+      ],
+      "after": [
+        {
+          "method": "GET",
+          "path": "/new",
+          "controller": "api",
+          "handlerMethod": "old",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /new"
+        }
+      ]
+    }
+  },
+  {
+    "id": "POLY-go",
+    "name": "Committed go route refreshes",
+    "status": "PASS",
+    "actual": {
+      "before": [
+        {
+          "method": "GET",
+          "path": "/old",
+          "controller": "handler",
+          "handlerMethod": "gin",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /old"
+        }
+      ],
+      "after": [
+        {
+          "method": "GET",
+          "path": "/new",
+          "controller": "handler",
+          "handlerMethod": "gin",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /new"
+        }
+      ]
+    }
+  },
+  {
+    "id": "F09-collision",
+    "name": "Canonical IDs resist path flattening collision",
+    "status": "PASS",
+    "actual": [
+      "team-a/order-service",
+      "team/a-order-service"
+    ]
+  }
+]

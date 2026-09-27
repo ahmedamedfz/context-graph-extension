@@ -32,12 +32,13 @@ export class GoApiParser {
     const httpHandlePattern = /(?:http|mux|r|router|srv)\s*\.\s*HandleFunc\s*\(\s*["']([^"']+)["']/g;
     let match;
     while ((match = httpHandlePattern.exec(content)) !== null) {
-      // net/http doesn't distinguish method in HandleFunc — mark as unknown
-      endpoints.push({
-        method: 'GET', // best guess without method info
-        path: match[1],
-        controller: filename,
-        handlerMethod: 'handleFunc',
+      const route = match[1].match(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS) (.+)$/);
+      const start = match.index;
+      const next = content.indexOf('.HandleFunc', start + match[0].length);
+      const body = content.slice(start, next === -1 ? undefined : next);
+      const methods = route ? [route[1]] : [...body.matchAll(/case\s+"(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)"/g)].map(m => m[1]);
+      for (const method of methods.length ? methods : ['ANY']) endpoints.push({
+        method: method as ApiEndpoint['method'], path: route?.[2] ?? match[1], controller: filename, handlerMethod: 'handleFunc',
       });
     }
 

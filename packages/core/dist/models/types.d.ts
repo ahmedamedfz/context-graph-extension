@@ -7,14 +7,31 @@ export interface ServiceIdentity {
     rootPath: string;
     name: string;
 }
+export interface ModelSchema {
+    name: string;
+    fields: Array<{
+        name: string;
+        type: string;
+    }>;
+    evidence: string;
+    completeness: 'partial';
+}
 export interface ApiEndpoint {
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+    requestSchema?: ModelSchema | null;
+    responseSchema?: ModelSchema | null;
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS' | 'ANY';
     path: string;
     controller: string;
     handlerMethod: string;
     requestModel?: string;
     responseModel?: string;
     semanticDescription?: string;
+    provenance?: {
+        file: string;
+        line: number;
+        parser: string;
+        confidence: 'observed' | 'partial';
+    };
 }
 export interface DatabaseColumn {
     name: string;
@@ -42,6 +59,13 @@ export interface ServiceDependency {
     evidence: string;
 }
 export interface ServiceContext {
+    models?: ModelSchema[];
+    coverage?: {
+        routes: 'static-patterns';
+        schemas: 'partial' | 'unsupported';
+        events: 'unsupported';
+    };
+    configurationRevision?: string;
     identity: ServiceIdentity;
     apis: ApiEndpoint[];
     database: DatabaseTable[];
@@ -99,12 +123,20 @@ export interface ChangeSet {
     oldCommit: string;
     newCommit: string;
     changedFiles: ChangedFile[];
+    fieldChanges?: Array<{
+        file: string;
+        field: string;
+        before: string | null;
+        after: string | null;
+        category: FileCategory;
+    }>;
     affectsApi: boolean;
     affectsDatabase: boolean;
     affectsDependencies: boolean;
 }
 export type ImpactSeverity = 'HIGH' | 'MEDIUM' | 'LOW';
 export interface ImpactEntry {
+    nodeId?: string;
     component: string;
     componentType: 'SERVICE' | 'DATABASE' | 'API' | 'FRONTEND';
     severity: ImpactSeverity;
@@ -121,8 +153,10 @@ export interface ImpactReport {
     impacts: ImpactEntry[];
     migrationRecommendations: string[];
     changeInterpretation?: string;
+    reasoningSource?: 'ai' | 'deterministic';
+    traversalTruncated?: boolean;
 }
-export type DetectedStack = 'spring-boot' | 'node' | 'python' | 'go' | 'unknown';
+export type DetectedStack = 'spring-boot' | 'node' | 'python' | 'go' | 'java' | 'php' | 'unknown';
 export interface DiscoveredService {
     serviceId: string;
     name: string;

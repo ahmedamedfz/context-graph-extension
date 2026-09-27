@@ -1,0 +1,3000 @@
+{
+  "services": [
+    {
+      "identity": {
+        "serviceId": "inventory-service",
+        "repository": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/commits",
+        "branch": "main",
+        "commitHash": "6dc1843129044bf7fd1bbaf544ba31a1a7543737",
+        "name": "inventory-service",
+        "rootPath": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/commits/inventory-service",
+        "previousCommitHash": "c833661cdb230521aa3803fa401f7314c3ec7cca"
+      },
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/inventory",
+          "controller": "InventoryController",
+          "handlerMethod": "getAllItems",
+          "responseModel": "List<InventoryResponse>",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "InventoryResponse",
+            "fields": [
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "productName",
+                "type": "String"
+              },
+              {
+                "name": "availableQuantity",
+                "type": "Integer"
+              },
+              {
+                "name": "inStock",
+                "type": "boolean"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/inventory/dto/InventoryResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] GET /inventory"
+        },
+        {
+          "method": "GET",
+          "path": "/inventory/{productId}",
+          "controller": "InventoryController",
+          "handlerMethod": "getItem",
+          "responseModel": "InventoryResponse",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "InventoryResponse",
+            "fields": [
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "productName",
+                "type": "String"
+              },
+              {
+                "name": "availableQuantity",
+                "type": "Integer"
+              },
+              {
+                "name": "inStock",
+                "type": "boolean"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/inventory/dto/InventoryResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] GET /inventory/{productId}"
+        },
+        {
+          "method": "GET",
+          "path": "/inventory/{productId}/check",
+          "controller": "InventoryController",
+          "handlerMethod": "checkInventory",
+          "responseModel": "InventoryResponse",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "InventoryResponse",
+            "fields": [
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "productName",
+                "type": "String"
+              },
+              {
+                "name": "availableQuantity",
+                "type": "Integer"
+              },
+              {
+                "name": "inStock",
+                "type": "boolean"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/inventory/dto/InventoryResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] GET /inventory/{productId}/check"
+        },
+        {
+          "method": "POST",
+          "path": "/inventory/{productId}/reserve",
+          "controller": "InventoryController",
+          "handlerMethod": "reserveInventory",
+          "responseModel": "Void",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] POST /inventory/{productId}/reserve"
+        },
+        {
+          "method": "PUT",
+          "path": "/inventory/{productId}",
+          "controller": "InventoryController",
+          "handlerMethod": "updateInventory",
+          "requestModel": "InventoryUpdateRequest",
+          "responseModel": "InventoryResponse",
+          "requestSchema": {
+            "name": "InventoryUpdateRequest",
+            "fields": [
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "warehouseLocation",
+                "type": "String"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/inventory/dto/InventoryUpdateRequest.java",
+            "completeness": "partial"
+          },
+          "responseSchema": {
+            "name": "InventoryResponse",
+            "fields": [
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "productName",
+                "type": "String"
+              },
+              {
+                "name": "availableQuantity",
+                "type": "Integer"
+              },
+              {
+                "name": "inStock",
+                "type": "boolean"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/inventory/dto/InventoryResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] PUT /inventory/{productId}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/inventory/{productId}",
+          "controller": "InventoryController",
+          "handlerMethod": "removeItem",
+          "responseModel": "Void",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] DELETE /inventory/{productId}"
+        }
+      ],
+      "database": [
+        {
+          "tableName": "inventory_items",
+          "entityClass": "InventoryItem",
+          "columns": [
+            {
+              "name": "id",
+              "type": "UUID",
+              "isPrimaryKey": true,
+              "isNullable": false,
+              "javaType": "UUID"
+            },
+            {
+              "name": "product_id",
+              "type": "UUID",
+              "isPrimaryKey": false,
+              "isNullable": false,
+              "javaType": "UUID"
+            },
+            {
+              "name": "product_name",
+              "type": "VARCHAR",
+              "isPrimaryKey": false,
+              "isNullable": false,
+              "javaType": "String"
+            },
+            {
+              "name": "available_quantity",
+              "type": "INTEGER",
+              "isPrimaryKey": false,
+              "isNullable": false,
+              "javaType": "Integer"
+            },
+            {
+              "name": "reserved_quantity",
+              "type": "INTEGER",
+              "isPrimaryKey": false,
+              "isNullable": true,
+              "javaType": "Integer"
+            },
+            {
+              "name": "warehouse_location",
+              "type": "VARCHAR",
+              "isPrimaryKey": false,
+              "isNullable": true,
+              "javaType": "String"
+            }
+          ],
+          "relationships": [
+            {
+              "type": "ManyToOne",
+              "fromEntity": "InventoryItem",
+              "toEntity": "Warehouse",
+              "fieldName": "warehouse"
+            }
+          ]
+        },
+        {
+          "tableName": "warehouses",
+          "entityClass": "Warehouse",
+          "columns": [
+            {
+              "name": "id",
+              "type": "UUID",
+              "isPrimaryKey": true,
+              "isNullable": false,
+              "javaType": "UUID"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR",
+              "isPrimaryKey": false,
+              "isNullable": false,
+              "javaType": "String"
+            },
+            {
+              "name": "location",
+              "type": "VARCHAR",
+              "isPrimaryKey": false,
+              "isNullable": true,
+              "javaType": "String"
+            },
+            {
+              "name": "capacity",
+              "type": "INTEGER",
+              "isPrimaryKey": false,
+              "isNullable": true,
+              "javaType": "Integer"
+            }
+          ],
+          "relationships": []
+        }
+      ],
+      "dependencies": [
+        {
+          "targetService": "inventory_db",
+          "type": "DATABASE",
+          "evidence": "Detected from datasource configuration"
+        }
+      ],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:19.874Z",
+      "fileCount": 5,
+      "status": "Cached",
+      "detectedStack": "spring-boot",
+      "models": [
+        {
+          "name": "InventoryResponse",
+          "fields": [
+            {
+              "name": "productId",
+              "type": "UUID"
+            },
+            {
+              "name": "productName",
+              "type": "String"
+            },
+            {
+              "name": "availableQuantity",
+              "type": "Integer"
+            },
+            {
+              "name": "inStock",
+              "type": "boolean"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/inventory/dto/InventoryResponse.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "InventoryUpdateRequest",
+          "fields": [
+            {
+              "name": "quantity",
+              "type": "Integer"
+            },
+            {
+              "name": "warehouseLocation",
+              "type": "String"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/inventory/dto/InventoryUpdateRequest.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "InventoryItem",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID"
+            },
+            {
+              "name": "productId",
+              "type": "UUID"
+            },
+            {
+              "name": "productName",
+              "type": "String"
+            },
+            {
+              "name": "availableQuantity",
+              "type": "Integer"
+            },
+            {
+              "name": "reservedQuantity",
+              "type": "Integer"
+            },
+            {
+              "name": "warehouseLocation",
+              "type": "String"
+            },
+            {
+              "name": "warehouse",
+              "type": "Warehouse"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/inventory/entity/InventoryItem.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "Warehouse",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID"
+            },
+            {
+              "name": "name",
+              "type": "String"
+            },
+            {
+              "name": "location",
+              "type": "String"
+            },
+            {
+              "name": "capacity",
+              "type": "Integer"
+            },
+            {
+              "name": "items",
+              "type": "java.util.List<InventoryItem>"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/inventory/entity/Warehouse.java",
+          "completeness": "partial"
+        }
+      ],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "partial",
+        "events": "unsupported"
+      },
+      "configurationRevision": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "semanticSummary": "[Deterministic] inventory-service: spring-boot service; 6 detected endpoints, 2 detected tables."
+    },
+    {
+      "identity": {
+        "serviceId": "order-service",
+        "repository": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/commits",
+        "branch": "main",
+        "commitHash": "6dc1843129044bf7fd1bbaf544ba31a1a7543737",
+        "name": "order-service",
+        "rootPath": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/commits/order-service",
+        "previousCommitHash": "c833661cdb230521aa3803fa401f7314c3ec7cca"
+      },
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/orders",
+          "controller": "OrderController",
+          "handlerMethod": "getAllOrders",
+          "responseModel": "List<OrderResponse>",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] GET /orders"
+        },
+        {
+          "method": "GET",
+          "path": "/orders/{id}",
+          "controller": "OrderController",
+          "handlerMethod": "getOrder",
+          "responseModel": "OrderResponse",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] GET /orders/{id}"
+        },
+        {
+          "method": "POST",
+          "path": "/orders",
+          "controller": "OrderController",
+          "handlerMethod": "createOrder",
+          "requestModel": "OrderRequest",
+          "responseModel": "OrderResponse",
+          "requestSchema": {
+            "name": "OrderRequest",
+            "fields": [
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderRequest.java",
+            "completeness": "partial"
+          },
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] POST /orders"
+        },
+        {
+          "method": "PUT",
+          "path": "/orders/{id}",
+          "controller": "OrderController",
+          "handlerMethod": "updateOrder",
+          "requestModel": "OrderRequest",
+          "responseModel": "OrderResponse",
+          "requestSchema": {
+            "name": "OrderRequest",
+            "fields": [
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderRequest.java",
+            "completeness": "partial"
+          },
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] PUT /orders/{id}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/orders/{id}",
+          "controller": "OrderController",
+          "handlerMethod": "deleteOrder",
+          "responseModel": "Void",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] DELETE /orders/{id}"
+        },
+        {
+          "method": "GET",
+          "path": "/orders/customer/{customerId}",
+          "controller": "OrderController",
+          "handlerMethod": "getOrdersByCustomer",
+          "responseModel": "List<OrderResponse>",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "OrderResponse",
+            "fields": [
+              {
+                "name": "id",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "productId",
+                "type": "UUID"
+              },
+              {
+                "name": "quantity",
+                "type": "Integer"
+              },
+              {
+                "name": "totalAmount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "createdAt",
+                "type": "LocalDateTime"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] GET /orders/customer/{customerId}"
+        }
+      ],
+      "database": [
+        {
+          "tableName": "customers",
+          "entityClass": "Customer",
+          "columns": [
+            {
+              "name": "id",
+              "type": "UUID",
+              "isPrimaryKey": true,
+              "isNullable": false,
+              "javaType": "UUID"
+            },
+            {
+              "name": "name",
+              "type": "VARCHAR",
+              "isPrimaryKey": false,
+              "isNullable": false,
+              "javaType": "String"
+            },
+            {
+              "name": "email",
+              "type": "VARCHAR",
+              "isPrimaryKey": false,
+              "isNullable": false,
+              "javaType": "String"
+            }
+          ],
+          "relationships": []
+        },
+        {
+          "tableName": "orders",
+          "entityClass": "Order",
+          "columns": [
+            {
+              "name": "id",
+              "type": "UUID",
+              "isPrimaryKey": true,
+              "isNullable": false,
+              "javaType": "UUID"
+            },
+            {
+              "name": "customer_id",
+              "type": "UUID",
+              "isPrimaryKey": false,
+              "isNullable": false,
+              "javaType": "UUID"
+            },
+            {
+              "name": "product_id",
+              "type": "UUID",
+              "isPrimaryKey": false,
+              "isNullable": false,
+              "javaType": "UUID"
+            },
+            {
+              "name": "quantity",
+              "type": "INTEGER",
+              "isPrimaryKey": false,
+              "isNullable": false,
+              "javaType": "Integer"
+            },
+            {
+              "name": "total_amount",
+              "type": "DECIMAL",
+              "isPrimaryKey": false,
+              "isNullable": true,
+              "javaType": "BigDecimal"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR",
+              "isPrimaryKey": false,
+              "isNullable": true,
+              "javaType": "String"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP",
+              "isPrimaryKey": false,
+              "isNullable": true,
+              "javaType": "LocalDateTime"
+            }
+          ],
+          "relationships": [
+            {
+              "type": "ManyToOne",
+              "fromEntity": "Order",
+              "toEntity": "Customer",
+              "fieldName": "customer"
+            }
+          ]
+        }
+      ],
+      "dependencies": [
+        {
+          "targetService": "inventory-service",
+          "type": "REST",
+          "evidence": "FeignClient in InventoryClient.java; Configuration reference to inventory-service in application.properties"
+        },
+        {
+          "targetService": "payment-service",
+          "type": "REST",
+          "evidence": "FeignClient in PaymentClient.java; Configuration reference to payment-service in application.properties"
+        },
+        {
+          "targetService": "orders_db",
+          "type": "DATABASE",
+          "evidence": "Detected from datasource configuration"
+        }
+      ],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:19.924Z",
+      "fileCount": 8,
+      "status": "Changed",
+      "detectedStack": "spring-boot",
+      "models": [
+        {
+          "name": "OrderRequest",
+          "fields": [
+            {
+              "name": "customerId",
+              "type": "Integer"
+            },
+            {
+              "name": "productId",
+              "type": "UUID"
+            },
+            {
+              "name": "quantity",
+              "type": "Integer"
+            },
+            {
+              "name": "totalAmount",
+              "type": "BigDecimal"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/order/dto/OrderRequest.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "OrderResponse",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID"
+            },
+            {
+              "name": "customerId",
+              "type": "Integer"
+            },
+            {
+              "name": "productId",
+              "type": "UUID"
+            },
+            {
+              "name": "quantity",
+              "type": "Integer"
+            },
+            {
+              "name": "totalAmount",
+              "type": "BigDecimal"
+            },
+            {
+              "name": "status",
+              "type": "String"
+            },
+            {
+              "name": "createdAt",
+              "type": "LocalDateTime"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "Customer",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID"
+            },
+            {
+              "name": "name",
+              "type": "String"
+            },
+            {
+              "name": "email",
+              "type": "String"
+            },
+            {
+              "name": "orders",
+              "type": "java.util.List<Order>"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/order/entity/Customer.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "Order",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID"
+            },
+            {
+              "name": "customerId",
+              "type": "UUID"
+            },
+            {
+              "name": "productId",
+              "type": "UUID"
+            },
+            {
+              "name": "quantity",
+              "type": "Integer"
+            },
+            {
+              "name": "totalAmount",
+              "type": "BigDecimal"
+            },
+            {
+              "name": "status",
+              "type": "String"
+            },
+            {
+              "name": "createdAt",
+              "type": "LocalDateTime"
+            },
+            {
+              "name": "customer",
+              "type": "Customer"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/order/entity/Order.java",
+          "completeness": "partial"
+        }
+      ],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "partial",
+        "events": "unsupported"
+      },
+      "configurationRevision": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "semanticSummary": "[Deterministic] order-service: spring-boot service; 6 detected endpoints, 2 detected tables."
+    },
+    {
+      "identity": {
+        "serviceId": "payment-service",
+        "repository": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/commits",
+        "branch": "main",
+        "commitHash": "6dc1843129044bf7fd1bbaf544ba31a1a7543737",
+        "name": "payment-service",
+        "rootPath": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/commits/payment-service",
+        "previousCommitHash": "c833661cdb230521aa3803fa401f7314c3ec7cca"
+      },
+      "apis": [
+        {
+          "method": "POST",
+          "path": "/payments/process",
+          "controller": "PaymentController",
+          "handlerMethod": "processPayment",
+          "requestModel": "PaymentRequest",
+          "responseModel": "PaymentResponse",
+          "requestSchema": {
+            "name": "PaymentRequest",
+            "fields": [
+              {
+                "name": "orderId",
+                "type": "UUID"
+              },
+              {
+                "name": "customerId",
+                "type": "Integer"
+              },
+              {
+                "name": "amount",
+                "type": "BigDecimal"
+              },
+              {
+                "name": "paymentMethod",
+                "type": "String"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/payment/dto/PaymentRequest.java",
+            "completeness": "partial"
+          },
+          "responseSchema": {
+            "name": "PaymentResponse",
+            "fields": [
+              {
+                "name": "paymentId",
+                "type": "UUID"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "transactionId",
+                "type": "String"
+              },
+              {
+                "name": "amount",
+                "type": "BigDecimal"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/payment/dto/PaymentResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] POST /payments/process"
+        },
+        {
+          "method": "GET",
+          "path": "/payments/{id}",
+          "controller": "PaymentController",
+          "handlerMethod": "getPayment",
+          "responseModel": "PaymentResponse",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "PaymentResponse",
+            "fields": [
+              {
+                "name": "paymentId",
+                "type": "UUID"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "transactionId",
+                "type": "String"
+              },
+              {
+                "name": "amount",
+                "type": "BigDecimal"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/payment/dto/PaymentResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] GET /payments/{id}"
+        },
+        {
+          "method": "GET",
+          "path": "/payments/order/{orderId}",
+          "controller": "PaymentController",
+          "handlerMethod": "getPaymentsByOrder",
+          "responseModel": "List<PaymentResponse>",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "PaymentResponse",
+            "fields": [
+              {
+                "name": "paymentId",
+                "type": "UUID"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "transactionId",
+                "type": "String"
+              },
+              {
+                "name": "amount",
+                "type": "BigDecimal"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/payment/dto/PaymentResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] GET /payments/order/{orderId}"
+        },
+        {
+          "method": "GET",
+          "path": "/payments/customer/{customerId}",
+          "controller": "PaymentController",
+          "handlerMethod": "getPaymentsByCustomer",
+          "responseModel": "List<PaymentResponse>",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "PaymentResponse",
+            "fields": [
+              {
+                "name": "paymentId",
+                "type": "UUID"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "transactionId",
+                "type": "String"
+              },
+              {
+                "name": "amount",
+                "type": "BigDecimal"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/payment/dto/PaymentResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] GET /payments/customer/{customerId}"
+        },
+        {
+          "method": "POST",
+          "path": "/payments/{id}/refund",
+          "controller": "PaymentController",
+          "handlerMethod": "refundPayment",
+          "responseModel": "PaymentResponse",
+          "requestSchema": null,
+          "responseSchema": {
+            "name": "PaymentResponse",
+            "fields": [
+              {
+                "name": "paymentId",
+                "type": "UUID"
+              },
+              {
+                "name": "status",
+                "type": "String"
+              },
+              {
+                "name": "transactionId",
+                "type": "String"
+              },
+              {
+                "name": "amount",
+                "type": "BigDecimal"
+              }
+            ],
+            "evidence": "src/main/java/com/demo/payment/dto/PaymentResponse.java",
+            "completeness": "partial"
+          },
+          "semanticDescription": "[Deterministic] POST /payments/{id}/refund"
+        },
+        {
+          "method": "GET",
+          "path": "/payments/health",
+          "controller": "PaymentController",
+          "handlerMethod": "health",
+          "responseModel": "String",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /payments/health"
+        }
+      ],
+      "database": [
+        {
+          "tableName": "payments",
+          "entityClass": "Payment",
+          "columns": [
+            {
+              "name": "id",
+              "type": "UUID",
+              "isPrimaryKey": true,
+              "isNullable": false,
+              "javaType": "UUID"
+            },
+            {
+              "name": "order_id",
+              "type": "UUID",
+              "isPrimaryKey": false,
+              "isNullable": false,
+              "javaType": "UUID"
+            },
+            {
+              "name": "customer_id",
+              "type": "INTEGER",
+              "isPrimaryKey": false,
+              "isNullable": false,
+              "javaType": "Integer"
+            },
+            {
+              "name": "amount",
+              "type": "DECIMAL",
+              "isPrimaryKey": false,
+              "isNullable": false,
+              "javaType": "BigDecimal"
+            },
+            {
+              "name": "status",
+              "type": "VARCHAR",
+              "isPrimaryKey": false,
+              "isNullable": true,
+              "javaType": "String"
+            },
+            {
+              "name": "transaction_id",
+              "type": "VARCHAR",
+              "isPrimaryKey": false,
+              "isNullable": true,
+              "javaType": "String"
+            },
+            {
+              "name": "payment_method",
+              "type": "VARCHAR",
+              "isPrimaryKey": false,
+              "isNullable": true,
+              "javaType": "String"
+            },
+            {
+              "name": "created_at",
+              "type": "TIMESTAMP",
+              "isPrimaryKey": false,
+              "isNullable": true,
+              "javaType": "LocalDateTime"
+            },
+            {
+              "name": "processed_at",
+              "type": "TIMESTAMP",
+              "isPrimaryKey": false,
+              "isNullable": true,
+              "javaType": "LocalDateTime"
+            }
+          ],
+          "relationships": []
+        }
+      ],
+      "dependencies": [
+        {
+          "targetService": "payment_db",
+          "type": "DATABASE",
+          "evidence": "Detected from datasource configuration"
+        }
+      ],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:19.975Z",
+      "fileCount": 4,
+      "status": "Cached",
+      "detectedStack": "spring-boot",
+      "models": [
+        {
+          "name": "PaymentRequest",
+          "fields": [
+            {
+              "name": "orderId",
+              "type": "UUID"
+            },
+            {
+              "name": "customerId",
+              "type": "Integer"
+            },
+            {
+              "name": "amount",
+              "type": "BigDecimal"
+            },
+            {
+              "name": "paymentMethod",
+              "type": "String"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/payment/dto/PaymentRequest.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "PaymentResponse",
+          "fields": [
+            {
+              "name": "paymentId",
+              "type": "UUID"
+            },
+            {
+              "name": "status",
+              "type": "String"
+            },
+            {
+              "name": "transactionId",
+              "type": "String"
+            },
+            {
+              "name": "amount",
+              "type": "BigDecimal"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/payment/dto/PaymentResponse.java",
+          "completeness": "partial"
+        },
+        {
+          "name": "Payment",
+          "fields": [
+            {
+              "name": "id",
+              "type": "UUID"
+            },
+            {
+              "name": "orderId",
+              "type": "UUID"
+            },
+            {
+              "name": "customerId",
+              "type": "Integer"
+            },
+            {
+              "name": "amount",
+              "type": "BigDecimal"
+            },
+            {
+              "name": "status",
+              "type": "String"
+            },
+            {
+              "name": "transactionId",
+              "type": "String"
+            },
+            {
+              "name": "paymentMethod",
+              "type": "String"
+            },
+            {
+              "name": "createdAt",
+              "type": "LocalDateTime"
+            },
+            {
+              "name": "processedAt",
+              "type": "LocalDateTime"
+            }
+          ],
+          "evidence": "src/main/java/com/demo/payment/entity/Payment.java",
+          "completeness": "partial"
+        }
+      ],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "partial",
+        "events": "unsupported"
+      },
+      "configurationRevision": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "semanticSummary": "[Deterministic] payment-service: spring-boot service; 6 detected endpoints, 1 detected tables."
+    }
+  ],
+  "graph": {
+    "nodes": [
+      {
+        "id": "inventory-service",
+        "type": "SERVICE",
+        "label": "inventory-service",
+        "data": {
+          "identity": {
+            "serviceId": "inventory-service",
+            "repository": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/commits",
+            "branch": "main",
+            "commitHash": "6dc1843129044bf7fd1bbaf544ba31a1a7543737",
+            "name": "inventory-service",
+            "rootPath": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/commits/inventory-service",
+            "previousCommitHash": "c833661cdb230521aa3803fa401f7314c3ec7cca"
+          },
+          "apis": [
+            {
+              "method": "GET",
+              "path": "/inventory",
+              "controller": "InventoryController",
+              "handlerMethod": "getAllItems",
+              "responseModel": "List<InventoryResponse>",
+              "requestSchema": null,
+              "responseSchema": {
+                "name": "InventoryResponse",
+                "fields": [
+                  {
+                    "name": "productId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "productName",
+                    "type": "String"
+                  },
+                  {
+                    "name": "availableQuantity",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "inStock",
+                    "type": "boolean"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/inventory/dto/InventoryResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] GET /inventory"
+            },
+            {
+              "method": "GET",
+              "path": "/inventory/{productId}",
+              "controller": "InventoryController",
+              "handlerMethod": "getItem",
+              "responseModel": "InventoryResponse",
+              "requestSchema": null,
+              "responseSchema": {
+                "name": "InventoryResponse",
+                "fields": [
+                  {
+                    "name": "productId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "productName",
+                    "type": "String"
+                  },
+                  {
+                    "name": "availableQuantity",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "inStock",
+                    "type": "boolean"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/inventory/dto/InventoryResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] GET /inventory/{productId}"
+            },
+            {
+              "method": "GET",
+              "path": "/inventory/{productId}/check",
+              "controller": "InventoryController",
+              "handlerMethod": "checkInventory",
+              "responseModel": "InventoryResponse",
+              "requestSchema": null,
+              "responseSchema": {
+                "name": "InventoryResponse",
+                "fields": [
+                  {
+                    "name": "productId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "productName",
+                    "type": "String"
+                  },
+                  {
+                    "name": "availableQuantity",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "inStock",
+                    "type": "boolean"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/inventory/dto/InventoryResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] GET /inventory/{productId}/check"
+            },
+            {
+              "method": "POST",
+              "path": "/inventory/{productId}/reserve",
+              "controller": "InventoryController",
+              "handlerMethod": "reserveInventory",
+              "responseModel": "Void",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] POST /inventory/{productId}/reserve"
+            },
+            {
+              "method": "PUT",
+              "path": "/inventory/{productId}",
+              "controller": "InventoryController",
+              "handlerMethod": "updateInventory",
+              "requestModel": "InventoryUpdateRequest",
+              "responseModel": "InventoryResponse",
+              "requestSchema": {
+                "name": "InventoryUpdateRequest",
+                "fields": [
+                  {
+                    "name": "quantity",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "warehouseLocation",
+                    "type": "String"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/inventory/dto/InventoryUpdateRequest.java",
+                "completeness": "partial"
+              },
+              "responseSchema": {
+                "name": "InventoryResponse",
+                "fields": [
+                  {
+                    "name": "productId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "productName",
+                    "type": "String"
+                  },
+                  {
+                    "name": "availableQuantity",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "inStock",
+                    "type": "boolean"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/inventory/dto/InventoryResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] PUT /inventory/{productId}"
+            },
+            {
+              "method": "DELETE",
+              "path": "/inventory/{productId}",
+              "controller": "InventoryController",
+              "handlerMethod": "removeItem",
+              "responseModel": "Void",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] DELETE /inventory/{productId}"
+            }
+          ],
+          "database": [
+            {
+              "tableName": "inventory_items",
+              "entityClass": "InventoryItem",
+              "columns": [
+                {
+                  "name": "id",
+                  "type": "UUID",
+                  "isPrimaryKey": true,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "product_id",
+                  "type": "UUID",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "product_name",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "String"
+                },
+                {
+                  "name": "available_quantity",
+                  "type": "INTEGER",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "Integer"
+                },
+                {
+                  "name": "reserved_quantity",
+                  "type": "INTEGER",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "Integer"
+                },
+                {
+                  "name": "warehouse_location",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "String"
+                }
+              ],
+              "relationships": [
+                {
+                  "type": "ManyToOne",
+                  "fromEntity": "InventoryItem",
+                  "toEntity": "Warehouse",
+                  "fieldName": "warehouse"
+                }
+              ]
+            },
+            {
+              "tableName": "warehouses",
+              "entityClass": "Warehouse",
+              "columns": [
+                {
+                  "name": "id",
+                  "type": "UUID",
+                  "isPrimaryKey": true,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "name",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "String"
+                },
+                {
+                  "name": "location",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "String"
+                },
+                {
+                  "name": "capacity",
+                  "type": "INTEGER",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "Integer"
+                }
+              ],
+              "relationships": []
+            }
+          ],
+          "dependencies": [
+            {
+              "targetService": "inventory_db",
+              "type": "DATABASE",
+              "evidence": "Detected from datasource configuration"
+            }
+          ],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:19.874Z",
+          "fileCount": 5,
+          "status": "Cached",
+          "detectedStack": "spring-boot",
+          "models": [
+            {
+              "name": "InventoryResponse",
+              "fields": [
+                {
+                  "name": "productId",
+                  "type": "UUID"
+                },
+                {
+                  "name": "productName",
+                  "type": "String"
+                },
+                {
+                  "name": "availableQuantity",
+                  "type": "Integer"
+                },
+                {
+                  "name": "inStock",
+                  "type": "boolean"
+                }
+              ],
+              "evidence": "src/main/java/com/demo/inventory/dto/InventoryResponse.java",
+              "completeness": "partial"
+            },
+            {
+              "name": "InventoryUpdateRequest",
+              "fields": [
+                {
+                  "name": "quantity",
+                  "type": "Integer"
+                },
+                {
+                  "name": "warehouseLocation",
+                  "type": "String"
+                }
+              ],
+              "evidence": "src/main/java/com/demo/inventory/dto/InventoryUpdateRequest.java",
+              "completeness": "partial"
+            },
+            {
+              "name": "InventoryItem",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "UUID"
+                },
+                {
+                  "name": "productId",
+                  "type": "UUID"
+                },
+                {
+                  "name": "productName",
+                  "type": "String"
+                },
+                {
+                  "name": "availableQuantity",
+                  "type": "Integer"
+                },
+                {
+                  "name": "reservedQuantity",
+                  "type": "Integer"
+                },
+                {
+                  "name": "warehouseLocation",
+                  "type": "String"
+                },
+                {
+                  "name": "warehouse",
+                  "type": "Warehouse"
+                }
+              ],
+              "evidence": "src/main/java/com/demo/inventory/entity/InventoryItem.java",
+              "completeness": "partial"
+            },
+            {
+              "name": "Warehouse",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "UUID"
+                },
+                {
+                  "name": "name",
+                  "type": "String"
+                },
+                {
+                  "name": "location",
+                  "type": "String"
+                },
+                {
+                  "name": "capacity",
+                  "type": "Integer"
+                },
+                {
+                  "name": "items",
+                  "type": "java.util.List<InventoryItem>"
+                }
+              ],
+              "evidence": "src/main/java/com/demo/inventory/entity/Warehouse.java",
+              "completeness": "partial"
+            }
+          ],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "partial",
+            "events": "unsupported"
+          },
+          "configurationRevision": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "semanticSummary": "[Deterministic] inventory-service: spring-boot service; 6 detected endpoints, 2 detected tables."
+        }
+      },
+      {
+        "id": "order-service",
+        "type": "SERVICE",
+        "label": "order-service",
+        "data": {
+          "identity": {
+            "serviceId": "order-service",
+            "repository": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/commits",
+            "branch": "main",
+            "commitHash": "6dc1843129044bf7fd1bbaf544ba31a1a7543737",
+            "name": "order-service",
+            "rootPath": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/commits/order-service",
+            "previousCommitHash": "c833661cdb230521aa3803fa401f7314c3ec7cca"
+          },
+          "apis": [
+            {
+              "method": "GET",
+              "path": "/orders",
+              "controller": "OrderController",
+              "handlerMethod": "getAllOrders",
+              "responseModel": "List<OrderResponse>",
+              "requestSchema": null,
+              "responseSchema": {
+                "name": "OrderResponse",
+                "fields": [
+                  {
+                    "name": "id",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "customerId",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "productId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "quantity",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "totalAmount",
+                    "type": "BigDecimal"
+                  },
+                  {
+                    "name": "status",
+                    "type": "String"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "LocalDateTime"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] GET /orders"
+            },
+            {
+              "method": "GET",
+              "path": "/orders/{id}",
+              "controller": "OrderController",
+              "handlerMethod": "getOrder",
+              "responseModel": "OrderResponse",
+              "requestSchema": null,
+              "responseSchema": {
+                "name": "OrderResponse",
+                "fields": [
+                  {
+                    "name": "id",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "customerId",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "productId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "quantity",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "totalAmount",
+                    "type": "BigDecimal"
+                  },
+                  {
+                    "name": "status",
+                    "type": "String"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "LocalDateTime"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] GET /orders/{id}"
+            },
+            {
+              "method": "POST",
+              "path": "/orders",
+              "controller": "OrderController",
+              "handlerMethod": "createOrder",
+              "requestModel": "OrderRequest",
+              "responseModel": "OrderResponse",
+              "requestSchema": {
+                "name": "OrderRequest",
+                "fields": [
+                  {
+                    "name": "customerId",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "productId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "quantity",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "totalAmount",
+                    "type": "BigDecimal"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/order/dto/OrderRequest.java",
+                "completeness": "partial"
+              },
+              "responseSchema": {
+                "name": "OrderResponse",
+                "fields": [
+                  {
+                    "name": "id",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "customerId",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "productId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "quantity",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "totalAmount",
+                    "type": "BigDecimal"
+                  },
+                  {
+                    "name": "status",
+                    "type": "String"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "LocalDateTime"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] POST /orders"
+            },
+            {
+              "method": "PUT",
+              "path": "/orders/{id}",
+              "controller": "OrderController",
+              "handlerMethod": "updateOrder",
+              "requestModel": "OrderRequest",
+              "responseModel": "OrderResponse",
+              "requestSchema": {
+                "name": "OrderRequest",
+                "fields": [
+                  {
+                    "name": "customerId",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "productId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "quantity",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "totalAmount",
+                    "type": "BigDecimal"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/order/dto/OrderRequest.java",
+                "completeness": "partial"
+              },
+              "responseSchema": {
+                "name": "OrderResponse",
+                "fields": [
+                  {
+                    "name": "id",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "customerId",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "productId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "quantity",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "totalAmount",
+                    "type": "BigDecimal"
+                  },
+                  {
+                    "name": "status",
+                    "type": "String"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "LocalDateTime"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] PUT /orders/{id}"
+            },
+            {
+              "method": "DELETE",
+              "path": "/orders/{id}",
+              "controller": "OrderController",
+              "handlerMethod": "deleteOrder",
+              "responseModel": "Void",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] DELETE /orders/{id}"
+            },
+            {
+              "method": "GET",
+              "path": "/orders/customer/{customerId}",
+              "controller": "OrderController",
+              "handlerMethod": "getOrdersByCustomer",
+              "responseModel": "List<OrderResponse>",
+              "requestSchema": null,
+              "responseSchema": {
+                "name": "OrderResponse",
+                "fields": [
+                  {
+                    "name": "id",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "customerId",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "productId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "quantity",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "totalAmount",
+                    "type": "BigDecimal"
+                  },
+                  {
+                    "name": "status",
+                    "type": "String"
+                  },
+                  {
+                    "name": "createdAt",
+                    "type": "LocalDateTime"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] GET /orders/customer/{customerId}"
+            }
+          ],
+          "database": [
+            {
+              "tableName": "customers",
+              "entityClass": "Customer",
+              "columns": [
+                {
+                  "name": "id",
+                  "type": "UUID",
+                  "isPrimaryKey": true,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "name",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "String"
+                },
+                {
+                  "name": "email",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "String"
+                }
+              ],
+              "relationships": []
+            },
+            {
+              "tableName": "orders",
+              "entityClass": "Order",
+              "columns": [
+                {
+                  "name": "id",
+                  "type": "UUID",
+                  "isPrimaryKey": true,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "customer_id",
+                  "type": "UUID",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "product_id",
+                  "type": "UUID",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "quantity",
+                  "type": "INTEGER",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "Integer"
+                },
+                {
+                  "name": "total_amount",
+                  "type": "DECIMAL",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "BigDecimal"
+                },
+                {
+                  "name": "status",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "String"
+                },
+                {
+                  "name": "created_at",
+                  "type": "TIMESTAMP",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "LocalDateTime"
+                }
+              ],
+              "relationships": [
+                {
+                  "type": "ManyToOne",
+                  "fromEntity": "Order",
+                  "toEntity": "Customer",
+                  "fieldName": "customer"
+                }
+              ]
+            }
+          ],
+          "dependencies": [
+            {
+              "targetService": "inventory-service",
+              "type": "REST",
+              "evidence": "FeignClient in InventoryClient.java; Configuration reference to inventory-service in application.properties"
+            },
+            {
+              "targetService": "payment-service",
+              "type": "REST",
+              "evidence": "FeignClient in PaymentClient.java; Configuration reference to payment-service in application.properties"
+            },
+            {
+              "targetService": "orders_db",
+              "type": "DATABASE",
+              "evidence": "Detected from datasource configuration"
+            }
+          ],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:19.924Z",
+          "fileCount": 8,
+          "status": "Changed",
+          "detectedStack": "spring-boot",
+          "models": [
+            {
+              "name": "OrderRequest",
+              "fields": [
+                {
+                  "name": "customerId",
+                  "type": "Integer"
+                },
+                {
+                  "name": "productId",
+                  "type": "UUID"
+                },
+                {
+                  "name": "quantity",
+                  "type": "Integer"
+                },
+                {
+                  "name": "totalAmount",
+                  "type": "BigDecimal"
+                }
+              ],
+              "evidence": "src/main/java/com/demo/order/dto/OrderRequest.java",
+              "completeness": "partial"
+            },
+            {
+              "name": "OrderResponse",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "UUID"
+                },
+                {
+                  "name": "customerId",
+                  "type": "Integer"
+                },
+                {
+                  "name": "productId",
+                  "type": "UUID"
+                },
+                {
+                  "name": "quantity",
+                  "type": "Integer"
+                },
+                {
+                  "name": "totalAmount",
+                  "type": "BigDecimal"
+                },
+                {
+                  "name": "status",
+                  "type": "String"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "LocalDateTime"
+                }
+              ],
+              "evidence": "src/main/java/com/demo/order/dto/OrderResponse.java",
+              "completeness": "partial"
+            },
+            {
+              "name": "Customer",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "UUID"
+                },
+                {
+                  "name": "name",
+                  "type": "String"
+                },
+                {
+                  "name": "email",
+                  "type": "String"
+                },
+                {
+                  "name": "orders",
+                  "type": "java.util.List<Order>"
+                }
+              ],
+              "evidence": "src/main/java/com/demo/order/entity/Customer.java",
+              "completeness": "partial"
+            },
+            {
+              "name": "Order",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "UUID"
+                },
+                {
+                  "name": "customerId",
+                  "type": "UUID"
+                },
+                {
+                  "name": "productId",
+                  "type": "UUID"
+                },
+                {
+                  "name": "quantity",
+                  "type": "Integer"
+                },
+                {
+                  "name": "totalAmount",
+                  "type": "BigDecimal"
+                },
+                {
+                  "name": "status",
+                  "type": "String"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "LocalDateTime"
+                },
+                {
+                  "name": "customer",
+                  "type": "Customer"
+                }
+              ],
+              "evidence": "src/main/java/com/demo/order/entity/Order.java",
+              "completeness": "partial"
+            }
+          ],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "partial",
+            "events": "unsupported"
+          },
+          "configurationRevision": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "semanticSummary": "[Deterministic] order-service: spring-boot service; 6 detected endpoints, 2 detected tables."
+        }
+      },
+      {
+        "id": "payment-service",
+        "type": "SERVICE",
+        "label": "payment-service",
+        "data": {
+          "identity": {
+            "serviceId": "payment-service",
+            "repository": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/commits",
+            "branch": "main",
+            "commitHash": "6dc1843129044bf7fd1bbaf544ba31a1a7543737",
+            "name": "payment-service",
+            "rootPath": "/private/var/folders/mn/bytxdjnx7m75k8vlyyzpry9r0000gn/T/bcg-acceptance-t5ZRgq/fixtures/commits/payment-service",
+            "previousCommitHash": "c833661cdb230521aa3803fa401f7314c3ec7cca"
+          },
+          "apis": [
+            {
+              "method": "POST",
+              "path": "/payments/process",
+              "controller": "PaymentController",
+              "handlerMethod": "processPayment",
+              "requestModel": "PaymentRequest",
+              "responseModel": "PaymentResponse",
+              "requestSchema": {
+                "name": "PaymentRequest",
+                "fields": [
+                  {
+                    "name": "orderId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "customerId",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "BigDecimal"
+                  },
+                  {
+                    "name": "paymentMethod",
+                    "type": "String"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/payment/dto/PaymentRequest.java",
+                "completeness": "partial"
+              },
+              "responseSchema": {
+                "name": "PaymentResponse",
+                "fields": [
+                  {
+                    "name": "paymentId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "status",
+                    "type": "String"
+                  },
+                  {
+                    "name": "transactionId",
+                    "type": "String"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "BigDecimal"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/payment/dto/PaymentResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] POST /payments/process"
+            },
+            {
+              "method": "GET",
+              "path": "/payments/{id}",
+              "controller": "PaymentController",
+              "handlerMethod": "getPayment",
+              "responseModel": "PaymentResponse",
+              "requestSchema": null,
+              "responseSchema": {
+                "name": "PaymentResponse",
+                "fields": [
+                  {
+                    "name": "paymentId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "status",
+                    "type": "String"
+                  },
+                  {
+                    "name": "transactionId",
+                    "type": "String"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "BigDecimal"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/payment/dto/PaymentResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] GET /payments/{id}"
+            },
+            {
+              "method": "GET",
+              "path": "/payments/order/{orderId}",
+              "controller": "PaymentController",
+              "handlerMethod": "getPaymentsByOrder",
+              "responseModel": "List<PaymentResponse>",
+              "requestSchema": null,
+              "responseSchema": {
+                "name": "PaymentResponse",
+                "fields": [
+                  {
+                    "name": "paymentId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "status",
+                    "type": "String"
+                  },
+                  {
+                    "name": "transactionId",
+                    "type": "String"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "BigDecimal"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/payment/dto/PaymentResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] GET /payments/order/{orderId}"
+            },
+            {
+              "method": "GET",
+              "path": "/payments/customer/{customerId}",
+              "controller": "PaymentController",
+              "handlerMethod": "getPaymentsByCustomer",
+              "responseModel": "List<PaymentResponse>",
+              "requestSchema": null,
+              "responseSchema": {
+                "name": "PaymentResponse",
+                "fields": [
+                  {
+                    "name": "paymentId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "status",
+                    "type": "String"
+                  },
+                  {
+                    "name": "transactionId",
+                    "type": "String"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "BigDecimal"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/payment/dto/PaymentResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] GET /payments/customer/{customerId}"
+            },
+            {
+              "method": "POST",
+              "path": "/payments/{id}/refund",
+              "controller": "PaymentController",
+              "handlerMethod": "refundPayment",
+              "responseModel": "PaymentResponse",
+              "requestSchema": null,
+              "responseSchema": {
+                "name": "PaymentResponse",
+                "fields": [
+                  {
+                    "name": "paymentId",
+                    "type": "UUID"
+                  },
+                  {
+                    "name": "status",
+                    "type": "String"
+                  },
+                  {
+                    "name": "transactionId",
+                    "type": "String"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "BigDecimal"
+                  }
+                ],
+                "evidence": "src/main/java/com/demo/payment/dto/PaymentResponse.java",
+                "completeness": "partial"
+              },
+              "semanticDescription": "[Deterministic] POST /payments/{id}/refund"
+            },
+            {
+              "method": "GET",
+              "path": "/payments/health",
+              "controller": "PaymentController",
+              "handlerMethod": "health",
+              "responseModel": "String",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /payments/health"
+            }
+          ],
+          "database": [
+            {
+              "tableName": "payments",
+              "entityClass": "Payment",
+              "columns": [
+                {
+                  "name": "id",
+                  "type": "UUID",
+                  "isPrimaryKey": true,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "order_id",
+                  "type": "UUID",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "customer_id",
+                  "type": "INTEGER",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "Integer"
+                },
+                {
+                  "name": "amount",
+                  "type": "DECIMAL",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "BigDecimal"
+                },
+                {
+                  "name": "status",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "String"
+                },
+                {
+                  "name": "transaction_id",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "String"
+                },
+                {
+                  "name": "payment_method",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "String"
+                },
+                {
+                  "name": "created_at",
+                  "type": "TIMESTAMP",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "LocalDateTime"
+                },
+                {
+                  "name": "processed_at",
+                  "type": "TIMESTAMP",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "LocalDateTime"
+                }
+              ],
+              "relationships": []
+            }
+          ],
+          "dependencies": [
+            {
+              "targetService": "payment_db",
+              "type": "DATABASE",
+              "evidence": "Detected from datasource configuration"
+            }
+          ],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:19.975Z",
+          "fileCount": 4,
+          "status": "Cached",
+          "detectedStack": "spring-boot",
+          "models": [
+            {
+              "name": "PaymentRequest",
+              "fields": [
+                {
+                  "name": "orderId",
+                  "type": "UUID"
+                },
+                {
+                  "name": "customerId",
+                  "type": "Integer"
+                },
+                {
+                  "name": "amount",
+                  "type": "BigDecimal"
+                },
+                {
+                  "name": "paymentMethod",
+                  "type": "String"
+                }
+              ],
+              "evidence": "src/main/java/com/demo/payment/dto/PaymentRequest.java",
+              "completeness": "partial"
+            },
+            {
+              "name": "PaymentResponse",
+              "fields": [
+                {
+                  "name": "paymentId",
+                  "type": "UUID"
+                },
+                {
+                  "name": "status",
+                  "type": "String"
+                },
+                {
+                  "name": "transactionId",
+                  "type": "String"
+                },
+                {
+                  "name": "amount",
+                  "type": "BigDecimal"
+                }
+              ],
+              "evidence": "src/main/java/com/demo/payment/dto/PaymentResponse.java",
+              "completeness": "partial"
+            },
+            {
+              "name": "Payment",
+              "fields": [
+                {
+                  "name": "id",
+                  "type": "UUID"
+                },
+                {
+                  "name": "orderId",
+                  "type": "UUID"
+                },
+                {
+                  "name": "customerId",
+                  "type": "Integer"
+                },
+                {
+                  "name": "amount",
+                  "type": "BigDecimal"
+                },
+                {
+                  "name": "status",
+                  "type": "String"
+                },
+                {
+                  "name": "transactionId",
+                  "type": "String"
+                },
+                {
+                  "name": "paymentMethod",
+                  "type": "String"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "LocalDateTime"
+                },
+                {
+                  "name": "processedAt",
+                  "type": "LocalDateTime"
+                }
+              ],
+              "evidence": "src/main/java/com/demo/payment/entity/Payment.java",
+              "completeness": "partial"
+            }
+          ],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "partial",
+            "events": "unsupported"
+          },
+          "configurationRevision": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "semanticSummary": "[Deterministic] payment-service: spring-boot service; 6 detected endpoints, 1 detected tables."
+        }
+      },
+      {
+        "id": "db:inventory_db",
+        "type": "DATABASE",
+        "label": "inventory_db",
+        "data": {
+          "name": "inventory_db",
+          "tables": [
+            {
+              "tableName": "inventory_items",
+              "entityClass": "InventoryItem",
+              "columns": [
+                {
+                  "name": "id",
+                  "type": "UUID",
+                  "isPrimaryKey": true,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "product_id",
+                  "type": "UUID",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "product_name",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "String"
+                },
+                {
+                  "name": "available_quantity",
+                  "type": "INTEGER",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "Integer"
+                },
+                {
+                  "name": "reserved_quantity",
+                  "type": "INTEGER",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "Integer"
+                },
+                {
+                  "name": "warehouse_location",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "String"
+                }
+              ],
+              "relationships": [
+                {
+                  "type": "ManyToOne",
+                  "fromEntity": "InventoryItem",
+                  "toEntity": "Warehouse",
+                  "fieldName": "warehouse"
+                }
+              ]
+            },
+            {
+              "tableName": "warehouses",
+              "entityClass": "Warehouse",
+              "columns": [
+                {
+                  "name": "id",
+                  "type": "UUID",
+                  "isPrimaryKey": true,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "name",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "String"
+                },
+                {
+                  "name": "location",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "String"
+                },
+                {
+                  "name": "capacity",
+                  "type": "INTEGER",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "Integer"
+                }
+              ],
+              "relationships": []
+            }
+          ],
+          "ownerServiceId": "inventory-service",
+          "ownerServiceIds": [
+            "inventory-service"
+          ]
+        }
+      },
+      {
+        "id": "db:orders_db",
+        "type": "DATABASE",
+        "label": "orders_db",
+        "data": {
+          "name": "orders_db",
+          "tables": [
+            {
+              "tableName": "customers",
+              "entityClass": "Customer",
+              "columns": [
+                {
+                  "name": "id",
+                  "type": "UUID",
+                  "isPrimaryKey": true,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "name",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "String"
+                },
+                {
+                  "name": "email",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "String"
+                }
+              ],
+              "relationships": []
+            },
+            {
+              "tableName": "orders",
+              "entityClass": "Order",
+              "columns": [
+                {
+                  "name": "id",
+                  "type": "UUID",
+                  "isPrimaryKey": true,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "customer_id",
+                  "type": "UUID",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "product_id",
+                  "type": "UUID",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "quantity",
+                  "type": "INTEGER",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "Integer"
+                },
+                {
+                  "name": "total_amount",
+                  "type": "DECIMAL",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "BigDecimal"
+                },
+                {
+                  "name": "status",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "String"
+                },
+                {
+                  "name": "created_at",
+                  "type": "TIMESTAMP",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "LocalDateTime"
+                }
+              ],
+              "relationships": [
+                {
+                  "type": "ManyToOne",
+                  "fromEntity": "Order",
+                  "toEntity": "Customer",
+                  "fieldName": "customer"
+                }
+              ]
+            }
+          ],
+          "ownerServiceId": "order-service",
+          "ownerServiceIds": [
+            "order-service"
+          ]
+        }
+      },
+      {
+        "id": "db:payment_db",
+        "type": "DATABASE",
+        "label": "payment_db",
+        "data": {
+          "name": "payment_db",
+          "tables": [
+            {
+              "tableName": "payments",
+              "entityClass": "Payment",
+              "columns": [
+                {
+                  "name": "id",
+                  "type": "UUID",
+                  "isPrimaryKey": true,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "order_id",
+                  "type": "UUID",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "UUID"
+                },
+                {
+                  "name": "customer_id",
+                  "type": "INTEGER",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "Integer"
+                },
+                {
+                  "name": "amount",
+                  "type": "DECIMAL",
+                  "isPrimaryKey": false,
+                  "isNullable": false,
+                  "javaType": "BigDecimal"
+                },
+                {
+                  "name": "status",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "String"
+                },
+                {
+                  "name": "transaction_id",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "String"
+                },
+                {
+                  "name": "payment_method",
+                  "type": "VARCHAR",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "String"
+                },
+                {
+                  "name": "created_at",
+                  "type": "TIMESTAMP",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "LocalDateTime"
+                },
+                {
+                  "name": "processed_at",
+                  "type": "TIMESTAMP",
+                  "isPrimaryKey": false,
+                  "isNullable": true,
+                  "javaType": "LocalDateTime"
+                }
+              ],
+              "relationships": []
+            }
+          ],
+          "ownerServiceId": "payment-service",
+          "ownerServiceIds": [
+            "payment-service"
+          ]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "inventory-service->db:inventory_db",
+        "type": "SERVICE_USES_DATABASE",
+        "source": "inventory-service",
+        "target": "db:inventory_db",
+        "label": "uses"
+      },
+      {
+        "id": "order-service->db:orders_db",
+        "type": "SERVICE_USES_DATABASE",
+        "source": "order-service",
+        "target": "db:orders_db",
+        "label": "uses"
+      },
+      {
+        "id": "payment-service->db:payment_db",
+        "type": "SERVICE_USES_DATABASE",
+        "source": "payment-service",
+        "target": "db:payment_db",
+        "label": "uses"
+      },
+      {
+        "id": "order-service->inventory-service",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "order-service",
+        "target": "inventory-service",
+        "label": "depends on"
+      },
+      {
+        "id": "order-service->payment-service",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "order-service",
+        "target": "payment-service",
+        "label": "depends on"
+      }
+    ],
+    "generatedAt": "2026-09-27T10:50:19.975Z"
+  },
+  "cacheStats": {
+    "cached": 2,
+    "refreshed": 1,
+    "failed": 0
+  }
+}

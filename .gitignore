@@ -5,3 +5,4 @@ dist/
 .context-graph-cache/
 *.js.map
 
+packages/vscode-extension/resources/granite/

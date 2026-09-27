@@ -1,0 +1,15 @@
+{
+  "model": {
+    "id": "ibm-granite/granite-4.2-3b-GGUF",
+    "revision": "c40945d71cd90f249a56985e8155551a9188dc30",
+    "file": "granite-4.2-3b-Q4_K_M.gguf",
+    "sha256": "e0406663965846ae22a403456eb826ccce5f450840491f71952f18a7cb78e7d5",
+    "size": 2244011552
+  },
+  "runtime": {
+    "version": "b11206",
+    "target": "darwin-arm64",
+    "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11206/llama-b11206-bin-macos-arm64.tar.gz",
+    "sha256": "a93cca3e3c86fc3430b036b56ba22a74a335893e7f930cc5a81314c6df4a5174"
+  }
+}

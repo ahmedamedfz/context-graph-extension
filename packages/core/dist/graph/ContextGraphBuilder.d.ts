@@ -17,6 +17,7 @@ export declare class ContextGraphBuilder {
         severity: 'HIGH' | 'MEDIUM' | 'LOW';
         reason: string;
         nodeId?: string;
+        componentType?: string;
     }>): SystemContextGraph;
     /**
      * Serialize graph to JSON-compatible format for VSIX webview.

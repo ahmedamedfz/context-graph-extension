@@ -1,3 +1,4 @@
+import { polyglotDependencies } from './ComposeDependencies';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ServiceDependency } from '../models/types';
@@ -24,15 +25,15 @@ export class DependencyAnalyzer {
     // Merge, deduplicating by target service
     const merged = new Map<string, ServiceDependency>();
 
-    for (const dep of [...restDeps, ...configDeps]) {
-      const existing = merged.get(dep.targetService);
+    for (const dep of [...restDeps, ...configDeps, ...polyglotDependencies(serviceRoot, knownServices)]) {
+      const existing = merged.get(`${dep.type}:${dep.targetService}`);
       if (existing) {
         if (dep.endpoints) {
           existing.endpoints = [...(existing.endpoints || []), ...dep.endpoints];
         }
         existing.evidence += '; ' + dep.evidence;
       } else {
-        merged.set(dep.targetService, { ...dep });
+        merged.set(`${dep.type}:${dep.targetService}`, { ...dep });
       }
     }
 
@@ -76,7 +77,7 @@ export class DependencyAnalyzer {
         // Look for RestTemplate or WebClient usage with service names
         if (/RestTemplate|WebClient/.test(content)) {
           for (const svc of knownServices) {
-            const svcBase = svc.replace('-service', '');
+            const svcBase = decodeURIComponent(svc.split('/').pop()!).replace('-service', '');
             const regex = new RegExp(`["'\`](?:[^"'\`]*${svcBase}[^"'\`]*)["'\`]`, 'gi');
             if (regex.test(content)) {
               deps.push({
@@ -108,7 +109,7 @@ export class DependencyAnalyzer {
       try {
         const content = fs.readFileSync(configFile, 'utf8');
         for (const svc of knownServices) {
-          const svcBase = svc.replace('-service', '');
+          const svcBase = decodeURIComponent(svc.split('/').pop()!).replace('-service', '');
           if (content.includes(svc) || content.includes(svcBase + '.url') || content.includes(svcBase + '-service')) {
             deps.push({
               targetService: svc,

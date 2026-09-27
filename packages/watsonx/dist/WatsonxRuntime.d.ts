@@ -1,11 +1,13 @@
 import { ServiceContext, ImpactReport, ChangeSet } from '@bob-context-graph/core';
-import { WatsonxClient } from './client/WatsonxClient';
+import { LlmClient } from './client/LlmClient';
 /**
- * High-level watsonx-powered reasoning operations for Bob Context Graph.
+ * High-level reasoning operations for Bob Context Graph.
+ * Accepts any LlmClient implementation (watsonx.ai or local Granite).
  */
 export declare class WatsonxRuntime {
     private client;
-    constructor(client: WatsonxClient);
+    constructor(client: LlmClient);
+    dispose(): void;
     /**
      * Generate a concise semantic summary for a service.
      */

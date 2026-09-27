@@ -39,6 +39,7 @@ export declare class GitAnalyzer {
      * Check if given commit hash is valid.
      */
     isValidCommit(hash: string): boolean;
+    readFileAt(commit: string, file: string): string;
     /**
      * Produce a short fingerprint of the current working-tree dirty state.
      * Uses `git status --porcelain` (tracks staged + unstaged + untracked)
@@ -48,12 +49,8 @@ export declare class GitAnalyzer {
      * Returns 'clean' when the working tree is identical to HEAD, or a
      * short hex string when there are uncommitted modifications.
      */
-    getDirtyHash(): string;
-    /**
-     * Get the list of working-tree dirty files relative to HEAD.
-     * Returns ChangedFile entries for all staged + unstaged modifications,
-     * allowing incremental analysis against uncommitted edits.
-     */
-    getDirtyFiles(): ChangedFile[];
+    getDirtyHash(ignorePaths?: string[], scope?: string): string;
+    private within;
+    getDirtyFiles(ignorePaths?: string[]): ChangedFile[];
 }
 //# sourceMappingURL=GitAnalyzer.d.ts.map

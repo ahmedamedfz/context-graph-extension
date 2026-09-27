@@ -4,6 +4,7 @@
  */
 export interface LlmClient {
   isConfigured(): boolean;
+  dispose?(): void;
   generate(prompt: string, maxNewTokens?: number): Promise<string>;
   generateJson<T>(prompt: string, maxNewTokens?: number): Promise<T | null>;
 }

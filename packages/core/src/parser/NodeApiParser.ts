@@ -1,3 +1,4 @@
+import { NativeApiParser } from './NativeApiParser';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ApiEndpoint } from '../models/types';
@@ -69,7 +70,8 @@ export class NodeApiParser {
       });
     }
 
-    return endpoints;
+    endpoints.push(...new NativeApiParser().parseFile(filePath, content));
+    return [...new Map(endpoints.map(a => [a.method + ':' + a.path, a])).values()];
   }
 
   private findJsFiles(dir: string): string[] {

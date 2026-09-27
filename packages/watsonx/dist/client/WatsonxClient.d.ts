@@ -1,3 +1,4 @@
+import { LlmClient } from './LlmClient';
 export interface WatsonxConfig {
     apiKey: string;
     projectId: string;
@@ -8,7 +9,7 @@ export interface WatsonxConfig {
  * IBM watsonx.ai REST client.
  * Handles authentication and text generation requests.
  */
-export declare class WatsonxClient {
+export declare class WatsonxClient implements LlmClient {
     private config;
     private http;
     private accessToken;

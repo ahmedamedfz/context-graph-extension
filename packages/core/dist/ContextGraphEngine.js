@@ -35,11 +35,15 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ContextGraphEngine = void 0;
 const path = __importStar(require("path"));
+const fs = __importStar(require("fs"));
 const WorkspaceScanner_1 = require("./scanner/WorkspaceScanner");
 const GitAnalyzer_1 = require("./git/GitAnalyzer");
 const SpringApiParser_1 = require("./parser/SpringApiParser");
 const JpaEntityParser_1 = require("./parser/JpaEntityParser");
 const DependencyAnalyzer_1 = require("./parser/DependencyAnalyzer");
+const SchemaEnricher_1 = require("./parser/SchemaEnricher");
+const ComposeDependencies_1 = require("./parser/ComposeDependencies");
+const NativeApiParser_1 = require("./parser/NativeApiParser");
 const NodeApiParser_1 = require("./parser/NodeApiParser");
 const PythonApiParser_1 = require("./parser/PythonApiParser");
 const GoApiParser_1 = require("./parser/GoApiParser");
@@ -59,6 +63,7 @@ const ContextGraphBuilder_1 = require("./graph/ContextGraphBuilder");
  */
 class ContextGraphEngine {
     constructor(options) {
+        this.pending = null;
         this.watsonxClient = null; // Injected at runtime
         this.cacheDir = options.cacheDir ?? path.join(options.workspaceRoot, '.context-graph-cache');
         this.scanner = new WorkspaceScanner_1.WorkspaceScanner(options.workspaceRoot);
@@ -68,7 +73,7 @@ class ContextGraphEngine {
         this.nodeParser = new NodeApiParser_1.NodeApiParser();
         this.pythonParser = new PythonApiParser_1.PythonApiParser();
         this.goParser = new GoApiParser_1.GoApiParser();
-        this.cache = new ContextCache_1.ContextCache(this.cacheDir);
+        this.cache = new ContextCache_1.ContextCache(this.cacheDir, fs.realpathSync(options.workspaceRoot));
         this.graphBuilder = new ContextGraphBuilder_1.ContextGraphBuilder();
     }
     setWatsonxClient(client) {
@@ -83,29 +88,50 @@ class ContextGraphEngine {
      *      without needing a commit.
      */
     async analyze(forceRefresh = false) {
+        if (this.pending) {
+            if (!forceRefresh)
+                return this.pending;
+            await this.pending;
+            return this.analyze(true);
+        }
+        this.pending = this.analyzeOnce(forceRefresh);
+        try {
+            return await this.pending;
+        }
+        finally {
+            this.pending = null;
+        }
+    }
+    async analyzeOnce(forceRefresh) {
         // ── 1. Service discovery (with workspace-fingerprint shortcut) ──────────
         const discovered = await this.discoverWithFingerprintCache(forceRefresh);
         const stats = { cached: 0, refreshed: 0, failed: 0 };
         const serviceContexts = [];
         const serviceIds = discovered.map(d => d.serviceId);
         // ── 2. Per-repo HEAD + dirty-hash map ────────────────────────────────────
-        // F02: build a per-repository HEAD map so all services in the same repo
-        // share the same observed commit and we only call git once per repo.
+        // F02: build a per-repository HEAD + branch map so all services in the same repo
+        // share the same observed commit/branch and we only call git once per repo.
         const repoHeadMap = new Map();
+        const repoBranchMap = new Map();
         const repoDirtyMap = new Map();
         for (const svc of discovered) {
             if (svc.isGitRepo && !repoHeadMap.has(svc.repository)) {
                 const git = new GitAnalyzer_1.GitAnalyzer(svc.repository);
                 repoHeadMap.set(svc.repository, git.getHead(false));
-                repoDirtyMap.set(svc.repository, git.getDirtyHash());
+                repoBranchMap.set(svc.repository, git.getBranch());
+                // Pass the cacheDir as an ignore path so that writing cache files inside
+                // the repo root doesn't pollute the dirty fingerprint.
+                repoDirtyMap.set(svc.repository, git.getDirtyHash([this.cacheDir]));
             }
         }
         for (const svc of discovered) {
-            // F02: override commitHash with the authoritative per-repo HEAD
+            // F02/BRANCH: override commitHash AND branch with authoritative per-repo values
+            // read fresh from git HEAD each time, so branch checkout at same SHA is detected.
             const repoHead = repoHeadMap.get(svc.repository);
-            const repoDirty = repoDirtyMap.get(svc.repository) ?? 'clean';
+            const repoBranch = repoBranchMap.get(svc.repository);
+            const repoDirty = svc.isGitRepo ? new GitAnalyzer_1.GitAnalyzer(svc.repository).getDirtyHash([this.cacheDir], svc.rootPath) : 'clean';
             const effective = repoHead
-                ? { ...svc, commitHash: repoHead }
+                ? { ...svc, commitHash: repoHead, branch: repoBranch ?? svc.branch }
                 : svc;
             try {
                 const ctx = await this.analyzeService(effective, serviceIds, forceRefresh, repoDirty);
@@ -146,7 +172,7 @@ class ContextGraphEngine {
                 // Fingerprint matches — attempt to reconstruct from cache metadata
                 const reconstructed = this.reconstructDiscoveredFromCache(stored.serviceIds);
                 if (reconstructed.length > 0) {
-                    process.stderr.write(`[BCG] Workspace fingerprint hit — skipping fs scan (${reconstructed.length} services)\n`);
+                    process.stderr.write(`[BCG] Workspace fingerprint hit — reusing discovery (marker scan still performed) (${reconstructed.length} services)\n`);
                     return reconstructed;
                 }
             }
@@ -165,24 +191,9 @@ class ContextGraphEngine {
     reconstructDiscoveredFromCache(serviceIds) {
         const result = [];
         for (const serviceId of serviceIds) {
-            const meta = this.cache.getLastAnalyzedCommit(serviceId);
-            if (!meta)
-                return []; // metadata missing — fall back to full scan
-            // Load the stored context to get identity + rootPath
-            const lastCommit = meta;
-            const lastDirty = this.cache.getLastDirtyHash(serviceId);
-            // We need any cached file for this service to reconstruct identity.
-            // Try the last-known compound key first, then fall back to clean key.
-            let ctx = this.cache.get(serviceId, '', lastCommit, lastDirty)
-                ?? this.cache.get(serviceId, '', lastCommit, 'clean');
-            // Branch is embedded in the filename but not stored separately in the index.
-            // We can't enumerate branches cheaply, so we try a branch-independent lookup
-            // by scanning for any file matching serviceId_*_commitHash*.json
-            if (!ctx) {
-                ctx = this.findCachedContextByServiceId(serviceId, lastCommit, lastDirty);
-            }
-            if (!ctx)
-                return []; // can't reconstruct — fall back to full scan
+            const ctx = this.cache.getLatest(serviceId);
+            if (!ctx || !fs.existsSync(ctx.identity.rootPath) || ctx.identity.commitHash === 'unknown')
+                return [];
             result.push({
                 serviceId: ctx.identity.serviceId,
                 name: ctx.identity.name,
@@ -201,35 +212,6 @@ class ContextGraphEngine {
     /**
      * Scan cache directory for any file belonging to this serviceId at the given commit.
      */
-    findCachedContextByServiceId(serviceId, commitHash, dirtyHash) {
-        const fs = require('fs');
-        try {
-            const files = fs.readdirSync(this.cacheDir);
-            for (const file of files) {
-                if (!file.endsWith('.json') || file === 'index.json')
-                    continue;
-                if (!file.startsWith(serviceId + '_'))
-                    continue;
-                if (!file.includes(commitHash))
-                    continue;
-                // Prefer the exact dirty hash slot if available
-                const isDirtyMatch = dirtyHash !== 'clean' ? file.includes(dirtyHash) : !file.includes('_') || file.endsWith(`_${commitHash}.json`);
-                if (!isDirtyMatch && dirtyHash === 'clean' && !file.endsWith(`_${commitHash}.json`))
-                    continue;
-                try {
-                    const content = fs.readFileSync(require('path').join(this.cacheDir, file), 'utf8');
-                    return JSON.parse(content);
-                }
-                catch {
-                    continue;
-                }
-            }
-        }
-        catch {
-            // ignore
-        }
-        return null;
-    }
     /**
      * Analyze a single service, using cache when possible.
      *
@@ -241,12 +223,20 @@ class ContextGraphEngine {
      */
     async analyzeService(discovered, allServiceIds, forceRefresh = false, dirtyHash = 'clean') {
         const { serviceId, branch, commitHash, isGitRepo } = discovered;
+        const latest = this.cache.getLatest(serviceId);
+        if (latest && (latest.configurationRevision !== (0, ComposeDependencies_1.configurationRevision)(discovered.rootPath) || latest.identity.rootPath !== discovered.rootPath))
+            return this.fullAnalysis(discovered, allServiceIds, dirtyHash);
         // F10: 'unknown' commitHash means no git — never treat as cached
         const commitIsKnown = commitHash !== 'unknown';
         // ── 1. Exact cache hit (commit + dirty state) ────────────────────────────
         if (!forceRefresh && commitIsKnown && this.cache.isCached(serviceId, branch, commitHash, dirtyHash)) {
             const cached = this.cache.get(serviceId, branch, commitHash, dirtyHash);
+            if (cached.identity.rootPath !== discovered.rootPath || cached.detectedStack !== discovered.detectedStack)
+                return this.fullAnalysis(discovered, allServiceIds, dirtyHash);
             cached.status = 'Cached';
+            // Restore metadata too when reverting a dirty overlay to the clean slot.
+            if (this.cache.getLastDirtyHash(serviceId) !== dirtyHash || this.cache.getLastAnalyzedCommit(serviceId) !== commitHash)
+                this.cache.set(cached, dirtyHash);
             return cached;
         }
         // ── 2. Dirty-state changed (uncommitted edits detected) ──────────────────
@@ -262,7 +252,7 @@ class ContextGraphEngine {
             return this.dirtyIncrementalAnalysis(discovered, allServiceIds, commitHash, dirtyHash);
         }
         // ── 3. Committed incremental analysis ───────────────────────────────────
-        if (commitIsKnown && lastAnalyzedCommit && lastAnalyzedCommit !== commitHash && !forceRefresh) {
+        if (commitIsKnown && lastAnalyzedCommit && lastAnalyzedCommit !== 'unknown' && lastAnalyzedCommit !== commitHash && !forceRefresh) {
             // F02: scope diff to service root path
             return this.incrementalAnalysis(discovered, allServiceIds, lastAnalyzedCommit, dirtyHash);
         }
@@ -289,6 +279,10 @@ class ContextGraphEngine {
             case 'python':
                 apis = this.pythonParser.parseService(rootPath);
                 break;
+            case 'java':
+            case 'php':
+                apis = new NativeApiParser_1.NativeApiParser().parseService(rootPath);
+                break;
             case 'go':
                 apis = this.goParser.parseService(rootPath);
                 break;
@@ -301,7 +295,7 @@ class ContextGraphEngine {
         const dependencies = this.dependencyAnalyzer.analyzeDependencies(rootPath, otherServices);
         // Detect database usage from config
         this.mergeDatabaseDependencies(dependencies, rootPath, name, database.length > 0);
-        const fileCount = this.scanner.countFiles(rootPath, ['.java', '.ts', '.js', '.py', '.go']);
+        const fileCount = this.scanner.countFiles(rootPath, ['.java', '.ts', '.js', '.py', '.go', '.php']);
         const context = {
             identity: {
                 serviceId,
@@ -329,6 +323,7 @@ class ContextGraphEngine {
                 // watsonx not available, skip
             }
         }
+        await this.describeApis(context);
         this.cache.set(context, dirtyHash);
         return context;
     }
@@ -344,10 +339,24 @@ class ContextGraphEngine {
         const git = new GitAnalyzer_1.GitAnalyzer(repository);
         // F02: get ALL changed files in the repo diff, then filter to this service's subdirectory
         const allChangedFiles = git.getChangedFiles(oldCommit, commitHash);
-        // Compute path prefix of the service relative to the repo root
-        const repoRoot = repository;
-        const serviceRelPath = path.relative(repoRoot, rootPath).replace(/\\/g, '/');
-        const prefix = serviceRelPath ? serviceRelPath + '/' : '';
+        // Compute path prefix of the service relative to the repo root.
+        // Use fs.realpathSync to resolve symlinks (/tmp → /private/tmp on macOS) so that
+        // path.relative produces a clean sub-path rather than a traversal path.
+        const fs = require('fs');
+        const realRepo = (() => { try {
+            return fs.realpathSync(repository);
+        }
+        catch {
+            return path.resolve(repository);
+        } })();
+        const realRoot = (() => { try {
+            return fs.realpathSync(rootPath);
+        }
+        catch {
+            return path.resolve(rootPath);
+        } })();
+        const serviceRelPath = path.relative(realRepo, realRoot).replace(/\\/g, '/');
+        const prefix = serviceRelPath && !serviceRelPath.startsWith('..') ? serviceRelPath + '/' : '';
         // Keep only files that belong to this service directory
         const committedChangedFiles = prefix
             ? allChangedFiles.filter(f => f.path.startsWith(prefix))
@@ -389,16 +398,50 @@ class ContextGraphEngine {
             // No baseline - do full analysis
             return this.fullAnalysis(discovered, allServiceIds, dirtyHash);
         }
+        // F02: if no files in this service's directory changed between commits,
+        // reuse the previous context as a cache hit (avoids re-parsing on unrelated commits).
+        if (changedFiles.length === 0) {
+            process.stderr.write(`[BCG] Incremental: no changes scoped to ${serviceId} — reusing cached context\n`);
+            const reused = { ...previousContext };
+            reused.identity = { ...previousContext.identity, commitHash, previousCommitHash: oldCommit };
+            reused.analyzedAt = new Date().toISOString();
+            reused.status = 'Cached';
+            this.cache.set(reused, dirtyHash);
+            return reused;
+        }
         // Build updated context
         const updated = { ...previousContext };
         updated.identity = { ...previousContext.identity, commitHash, previousCommitHash: oldCommit };
         updated.analyzedAt = new Date().toISOString();
         updated.status = 'Changed';
         updated.detectedStack = detectedStack;
-        // Re-analyze only affected sections
-        if (changeSet.affectsApi && detectedStack === 'spring-boot') {
-            process.stderr.write(`[BCG] Re-analyzing APIs for ${serviceId}\n`);
-            updated.apis = this.apiParser.parseService(rootPath);
+        // Re-analyze only affected sections — dispatch to the right parser per stack.
+        // For non-spring stacks, any source file change may add/remove routes, so we
+        // re-parse whenever API or SERVICE files are in the changeset.
+        const nonSpringSourceChanged = detectedStack !== 'spring-boot' &&
+            changedFiles.some(f => f.category === 'SERVICE' || f.category === 'API' || f.category === 'CONFIG');
+        if (changeSet.affectsApi || nonSpringSourceChanged) {
+            process.stderr.write(`[BCG] Re-analyzing APIs for ${serviceId} (${detectedStack})\n`);
+            switch (detectedStack) {
+                case 'spring-boot':
+                    updated.apis = this.apiParser.parseService(rootPath);
+                    break;
+                case 'node':
+                    updated.apis = this.nodeParser.parseService(rootPath);
+                    break;
+                case 'python':
+                    updated.apis = this.pythonParser.parseService(rootPath);
+                    break;
+                case 'java':
+                case 'php':
+                    updated.apis = new NativeApiParser_1.NativeApiParser().parseService(rootPath);
+                    break;
+                case 'go':
+                    updated.apis = this.goParser.parseService(rootPath);
+                    break;
+                default:
+                    break;
+            }
         }
         if (changeSet.affectsDatabase && detectedStack === 'spring-boot') {
             process.stderr.write(`[BCG] Re-analyzing DB schema for ${serviceId}\n`);
@@ -408,16 +451,30 @@ class ContextGraphEngine {
             process.stderr.write(`[BCG] Re-analyzing dependencies for ${serviceId}\n`);
             const otherServices = allServiceIds.filter(id => id !== serviceId);
             const newRestDeps = this.dependencyAnalyzer.analyzeDependencies(rootPath, otherServices);
-            // F08: Preserve existing DATABASE dependencies and merge new REST deps
-            const existingDbDeps = previousContext.dependencies.filter(d => d.type === 'DATABASE');
+            // F08: Re-detect DB from config fresh (so a datasource rename removes the old entry).
+            // Start from scratch for DB deps — re-read config, do NOT carry over old DB deps.
+            const freshDbNames = this.dependencyAnalyzer.detectDatabaseUsage(rootPath);
+            const freshDbDeps = freshDbNames.map(dbName => ({
+                targetService: dbName,
+                type: 'DATABASE',
+                evidence: 'Detected from datasource configuration',
+            }));
+            // If no DB from config and service has entities, infer (same rule as fullAnalysis)
+            if (freshDbDeps.length === 0 && updated.database.length > 0) {
+                const inferredName = updated.identity.name.replace('-service', '') + '_db';
+                freshDbDeps.push({
+                    targetService: inferredName,
+                    type: 'DATABASE',
+                    evidence: 'Inferred from JPA entities',
+                });
+            }
+            // Merge: REST deps + fresh DB deps (deduplication by type:target key)
             const merged = new Map();
-            for (const dep of [...existingDbDeps, ...newRestDeps]) {
+            for (const dep of [...newRestDeps, ...freshDbDeps]) {
                 const key = `${dep.type}:${dep.targetService}`;
                 if (!merged.has(key))
                     merged.set(key, dep);
             }
-            // Re-detect database from config in case it changed
-            this.mergeDatabaseDependencies(Array.from(merged.values()), rootPath, updated.identity.name, updated.database.length > 0, merged);
             updated.dependencies = Array.from(merged.values());
         }
         // Regenerate semantic summary
@@ -429,6 +486,7 @@ class ContextGraphEngine {
                 // keep old summary
             }
         }
+        await this.describeApis(updated);
         this.cache.set(updated, dirtyHash);
         return updated;
     }
@@ -443,9 +501,22 @@ class ContextGraphEngine {
         process.stderr.write(`[BCG] Dirty incremental: ${serviceId} @ ${commitHash.slice(0, 7)} dirty=${dirtyHash.slice(0, 7)}\n`);
         const git = new GitAnalyzer_1.GitAnalyzer(repository);
         const allDirtyFiles = git.getDirtyFiles();
-        // Scope to this service's subdirectory
-        const serviceRelPath = path.relative(repository, rootPath).replace(/\\/g, '/');
-        const prefix = serviceRelPath ? serviceRelPath + '/' : '';
+        // Scope to this service's subdirectory (resolve symlinks for correct relative path)
+        const _fsD = require('fs');
+        const _repoD = (() => { try {
+            return _fsD.realpathSync(repository);
+        }
+        catch {
+            return path.resolve(repository);
+        } })();
+        const _rootD = (() => { try {
+            return _fsD.realpathSync(rootPath);
+        }
+        catch {
+            return path.resolve(rootPath);
+        } })();
+        const serviceRelPath = path.relative(_repoD, _rootD).replace(/\\/g, '/');
+        const prefix = serviceRelPath && !serviceRelPath.startsWith('..') ? serviceRelPath + '/' : '';
         const changedFiles = prefix
             ? allDirtyFiles.filter(f => f.path.startsWith(prefix))
             : allDirtyFiles;
@@ -481,9 +552,30 @@ class ContextGraphEngine {
         const updated = { ...baseline };
         updated.analyzedAt = new Date().toISOString();
         updated.status = 'Changed';
-        if (affectsApi && detectedStack === 'spring-boot') {
-            process.stderr.write(`[BCG] Dirty re-analyzing APIs for ${serviceId}\n`);
-            updated.apis = this.apiParser.parseService(rootPath);
+        const nonSpringSourceChanged = detectedStack !== 'spring-boot' &&
+            changedFiles.some(f => f.category === 'SERVICE' || f.category === 'API' || f.category === 'CONFIG');
+        if (affectsApi || nonSpringSourceChanged) {
+            process.stderr.write(`[BCG] Dirty re-analyzing APIs for ${serviceId} (${detectedStack})\n`);
+            switch (detectedStack) {
+                case 'spring-boot':
+                    updated.apis = this.apiParser.parseService(rootPath);
+                    break;
+                case 'node':
+                    updated.apis = this.nodeParser.parseService(rootPath);
+                    break;
+                case 'python':
+                    updated.apis = this.pythonParser.parseService(rootPath);
+                    break;
+                case 'java':
+                case 'php':
+                    updated.apis = new NativeApiParser_1.NativeApiParser().parseService(rootPath);
+                    break;
+                case 'go':
+                    updated.apis = this.goParser.parseService(rootPath);
+                    break;
+                default:
+                    break;
+            }
         }
         if (affectsDatabase && detectedStack === 'spring-boot') {
             process.stderr.write(`[BCG] Dirty re-analyzing DB schema for ${serviceId}\n`);
@@ -503,6 +595,7 @@ class ContextGraphEngine {
                 // keep old summary
             }
         }
+        await this.describeApis(updated);
         this.cache.set(updated, dirtyHash);
         return updated;
     }
@@ -516,24 +609,44 @@ class ContextGraphEngine {
             return null;
         const git = new GitAnalyzer_1.GitAnalyzer(svc.identity.repository);
         const currentCommit = git.getHead(false);
-        const currentDirty = git.getDirtyHash();
+        const currentDirty = git.getDirtyHash([this.cacheDir], svc.identity.rootPath);
         // F03: use the commit stored in the cache as the baseline (not current HEAD)
         const baselineCommit = this.cache.getBaselineCommit(serviceId);
-        if (!baselineCommit)
+        // F03-before / DIRTY-impact: if no explicit baseline commit exists, fall back to
+        // lastAnalyzedCommit for a clean-vs-dirty comparison. This allows detecting
+        // uncommitted edits even before any second commit has been made.
+        const lastAnalyzedCommit = this.cache.getLastAnalyzedCommit(serviceId);
+        const effectiveBaseline = baselineCommit ?? lastAnalyzedCommit;
+        if (!effectiveBaseline || !git.isValidCommit(effectiveBaseline) || !git.isValidCommit(currentCommit))
             return null;
-        if (baselineCommit === currentCommit && currentDirty === 'clean')
+        if (effectiveBaseline === currentCommit && currentDirty === 'clean')
             return null;
         const git2 = new GitAnalyzer_1.GitAnalyzer(svc.identity.repository);
-        const committedChanges = baselineCommit !== currentCommit
-            ? git2.getChangedFiles(baselineCommit, currentCommit)
+        const committedChanges = effectiveBaseline !== currentCommit
+            ? git2.getChangedFiles(effectiveBaseline, currentCommit)
             : [];
-        const dirtyFiles = currentDirty !== 'clean' ? git2.getDirtyFiles() : [];
-        // F02: scope to this service's path
-        const serviceRelPath = path.relative(svc.identity.repository, svc.identity.rootPath).replace(/\\/g, '/');
-        const prefix = serviceRelPath ? serviceRelPath + '/' : '';
+        const dirtyFiles = currentDirty !== 'clean' ? git2.getDirtyFiles([this.cacheDir]) : [];
+        // F02: scope to this service's path (resolve symlinks before computing relative path)
+        const _fsC = require('fs');
+        const _repoC = (() => { try {
+            return _fsC.realpathSync(svc.identity.repository);
+        }
+        catch {
+            return path.resolve(svc.identity.repository);
+        } })();
+        const _rootC = (() => { try {
+            return _fsC.realpathSync(svc.identity.rootPath);
+        }
+        catch {
+            return path.resolve(svc.identity.rootPath);
+        } })();
+        const serviceRelPath = path.relative(_repoC, _rootC).replace(/\\/g, '/');
+        const prefix = serviceRelPath && !serviceRelPath.startsWith('..') ? serviceRelPath + '/' : '';
         const committedFiltered = prefix ? committedChanges.filter(f => f.path.startsWith(prefix)) : committedChanges;
         const dirtyFiltered = prefix ? dirtyFiles.filter(f => f.path.startsWith(prefix)) : dirtyFiles;
         const changedFiles = this.mergeChangedFiles(committedFiltered, dirtyFiltered);
+        if (changedFiles.length === 0)
+            return null;
         const hasDtoChange = changedFiles.some(f => f.category === 'DTO');
         let dtoAffectsApi = false;
         if (hasDtoChange) {
@@ -546,12 +659,28 @@ class ContextGraphEngine {
                 return changedDtoNames.some(dto => reqModel.includes(dto) || resModel.includes(dto));
             });
         }
+        const fieldChanges = [];
+        for (const file of changedFiles.filter(f => f.category === 'DTO' || f.category === 'ENTITY')) {
+            const beforeText = git.readFileAt(effectiveBaseline, file.path);
+            let afterText = '';
+            try {
+                afterText = fs.readFileSync(path.join(svc.identity.repository, file.path), 'utf8');
+            }
+            catch { /* deleted */ }
+            const fields = (text) => new Map([...text.matchAll(/(?:private|public|protected)\s+([\w<>?,.]+)\s+(\w+)\s*[;=]/g)].map(m => [m[2], m[1]]));
+            const before = fields(beforeText), after = fields(afterText);
+            for (const field of new Set([...before.keys(), ...after.keys()])) {
+                if (before.get(field) !== after.get(field))
+                    fieldChanges.push({ file: file.path, field, before: before.get(field) ?? null, after: after.get(field) ?? null, category: file.category });
+            }
+        }
         return {
             serviceId,
-            oldCommit: baselineCommit,
+            fieldChanges,
+            oldCommit: effectiveBaseline,
             newCommit: currentCommit,
             changedFiles,
-            affectsApi: changedFiles.some(f => f.category === 'API') || dtoAffectsApi,
+            affectsApi: changedFiles.some(f => f.category === 'API') || dtoAffectsApi || (svc.detectedStack !== 'spring-boot' && changedFiles.some(f => f.category === 'SERVICE')),
             affectsDatabase: changedFiles.some(f => f.category === 'ENTITY'),
             affectsDependencies: changedFiles.some(f => ['SERVICE', 'CONFIG'].includes(f.category)),
         };
@@ -559,24 +688,45 @@ class ContextGraphEngine {
     /**
      * Refresh a single specific service without re-analyzing others.
      * F05: targeted refresh — only invalidates and re-parses the target service.
+     *
+     * The comparison baseline (baselineCommit) is preserved across the refresh so
+     * that detectAndAnalyzeChanges / MCP analyze_change can still find the meaningful
+     * "before" snapshot after a targeted refresh.
      */
     async refreshService(serviceId) {
-        this.cache.invalidate(serviceId);
+        if (this.pending) {
+            await this.pending;
+            return this.refreshService(serviceId);
+        }
+        this.pending = this.refreshServiceOnce(serviceId);
+        try {
+            return await this.pending;
+        }
+        finally {
+            this.pending = null;
+        }
+    }
+    async refreshServiceOnce(serviceId) {
+        // Preserve the baseline before we wipe the cache so detectAndAnalyzeChanges
+        // still has a valid "before" side after the fresh analysis writes a new entry.
+        const savedBaseline = this.cache.getBaselineCommit(serviceId);
+        const savedLastCommit = this.cache.getLastAnalyzedCommit(serviceId);
+        // Keep comparison history and immutable prior snapshots during a refresh.
         const discovered = await this.scanner.discoverServices();
         const serviceIds = discovered.map(d => d.serviceId);
         const target = discovered.find(d => d.serviceId === serviceId);
         const stats = { cached: 0, refreshed: 0, failed: 0 };
         const serviceContexts = [];
-        // Build repo dirty map
+        // Build repo dirty map (excluding cacheDir to avoid spurious dirty detection)
         const repoDirtyMap = new Map();
         for (const svc of discovered) {
             if (svc.isGitRepo && !repoDirtyMap.has(svc.repository)) {
-                repoDirtyMap.set(svc.repository, new GitAnalyzer_1.GitAnalyzer(svc.repository).getDirtyHash());
+                repoDirtyMap.set(svc.repository, new GitAnalyzer_1.GitAnalyzer(svc.repository).getDirtyHash([this.cacheDir]));
             }
         }
         for (const svc of discovered) {
             try {
-                const repoDirty = repoDirtyMap.get(svc.repository) ?? 'clean';
+                const repoDirty = svc.isGitRepo ? new GitAnalyzer_1.GitAnalyzer(svc.repository).getDirtyHash([this.cacheDir], svc.rootPath) : 'clean';
                 let ctx;
                 if (svc.serviceId === serviceId && target) {
                     // Force re-analyze only this service
@@ -600,6 +750,8 @@ class ContextGraphEngine {
             }
         }
         const graph = this.graphBuilder.build(serviceContexts);
+        // Restore the saved baseline so analyze_change still sees the meaningful "before"
+        // cache.set advances history only when HEAD changes.
         return { services: serviceContexts, graph, cacheStats: stats };
     }
     getCache() {
@@ -646,6 +798,20 @@ class ContextGraphEngine {
         if (hasEntities && !dependencies.find(d => d.type === 'DATABASE') && (!mergedMap || !Array.from(mergedMap.values()).some(d => d.type === 'DATABASE'))) {
             const dbName = serviceName.replace('-service', '') + '_db';
             addDb(dbName, 'Inferred from JPA entities');
+        }
+    }
+    async describeApis(context) {
+        (0, SchemaEnricher_1.enrichSchemas)(context);
+        context.configurationRevision = (0, ComposeDependencies_1.configurationRevision)(context.identity.rootPath);
+        context.semanticSummary ?? (context.semanticSummary = `[Deterministic] ${context.identity.name}: ${context.detectedStack ?? 'unknown'} service; ${context.apis.length} detected endpoints, ${context.database.length} detected tables.`);
+        for (const api of context.apis) {
+            if (!api.semanticDescription && this.watsonxClient?.describeApi) {
+                try {
+                    api.semanticDescription = await this.watsonxClient.describeApi(api.method, api.path, api.requestModel, api.responseModel, context);
+                }
+                catch { /* deterministic fallback */ }
+            }
+            api.semanticDescription ?? (api.semanticDescription = `[Deterministic] ${api.method} ${api.path}`);
         }
     }
     makeErrorContext(discovered, error) {

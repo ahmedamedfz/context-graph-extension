@@ -1,0 +1,10 @@
+{
+  "model": "ibm-granite/granite-4.2-3b-GGUF",
+  "bundleDir": "/tmp/bcg-install-check/extensions/bob-context-graph.bob-context-graph-0.2.0/resources/granite",
+  "text": "Granite is running locally.",
+  "json": {
+    "local": true,
+    "model": "Granite"
+  },
+  "elapsedMs": 20286
+}

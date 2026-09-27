@@ -74,7 +74,7 @@ class ContextGraphBuilder {
         }
         // Create service → service dependency edges
         for (const svc of services) {
-            for (const dep of svc.dependencies) {
+            for (const dep of svc.dependencies.filter(d => d.type === 'REST')) {
                 // Find target service node
                 const targetId = this.resolveServiceId(dep.targetService, services);
                 if (targetId) {
@@ -105,7 +105,7 @@ class ContextGraphBuilder {
     applyImpact(graph, impacts) {
         const updatedNodes = graph.nodes.map(node => {
             // F17: prefer explicit nodeId match over label substring matching
-            const impact = impacts.find(i => {
+            const matches = impacts.filter(i => {
                 if (i.nodeId)
                     return i.nodeId === node.id;
                 const comp = i.component.toLowerCase();
@@ -123,15 +123,17 @@ class ContextGraphBuilder {
                     return dbBase.startsWith(servicePart) || servicePart.startsWith(dbBase);
                 }
                 // Substring fallback for non-DB nodes
-                if (node.type !== 'DATABASE') {
-                    return comp.includes(nodeLabel) || nodeLabel.includes(comp);
+                if (node.type !== 'DATABASE' && i.componentType !== 'DATABASE' && !comp.includes('database')) {
+                    return comp === nodeLabel + ' api' || comp === nodeId + ' api';
                 }
                 return false;
             });
+            const rank = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+            const impact = matches.sort((a, b) => rank[b.severity] - rank[a.severity] || a.reason.localeCompare(b.reason))[0];
             if (impact) {
                 return { ...node, impactSeverity: impact.severity, impactReason: impact.reason };
             }
-            return { ...node, impactSeverity: 'SAFE' };
+            return { ...node, impactSeverity: 'SAFE', impactReason: undefined };
         });
         return { ...graph, nodes: updatedNodes };
     }
@@ -175,14 +177,8 @@ class ContextGraphBuilder {
         const direct = services.find(s => s.identity.serviceId === targetService);
         if (direct)
             return direct.identity.serviceId;
-        // Partial match
-        const partial = services.find(s => s.identity.serviceId.includes(targetService) ||
-            targetService.includes(s.identity.serviceId) ||
-            s.identity.name.toLowerCase().includes(targetService.toLowerCase()) ||
-            targetService.toLowerCase().includes(s.identity.name.toLowerCase()));
-        if (partial)
-            return partial.identity.serviceId;
-        return null;
+        const matches = services.filter(s => s.identity.name === targetService);
+        return matches.length === 1 ? matches[0].identity.serviceId : null;
     }
     getNodeStatus(node) {
         if (node.type === 'DATABASE')

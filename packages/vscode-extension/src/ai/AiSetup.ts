@@ -31,8 +31,9 @@ async function storeProvider(provider: AiProvider): Promise<void> {
  * Returns a configured WatsonxRuntime or null when the user picks "none".
  */
 export async function runAiSetup(
-  secrets: vscode.SecretStorage
-): Promise<WatsonxRuntime | null> {
+  secrets: vscode.SecretStorage,
+  bundleDir: string
+): Promise<WatsonxRuntime | null | undefined> {
   const choice = await vscode.window.showQuickPick(
     [
       {
@@ -42,7 +43,7 @@ export async function runAiSetup(
       },
       {
         label: '$(server) Local IBM Granite 4.2 3B',
-        description: 'Run IBM Granite locally via Ollama (no credentials needed)',
+        description: 'Bundled model, runs offline; no Ollama or credentials needed',
         value: 'local' as AiProvider,
       },
       {
@@ -60,7 +61,7 @@ export async function runAiSetup(
 
   if (!choice) {
     // User dismissed — treat as "none" but don't persist so we ask again next time
-    return null;
+    return undefined;
   }
 
   await storeProvider(choice.value);
@@ -70,7 +71,7 @@ export async function runAiSetup(
   }
 
   if (choice.value === 'local') {
-    return await setupLocal();
+    return await setupLocal(bundleDir);
   }
 
   // 'none'
@@ -129,51 +130,26 @@ async function setupWatsonx(secrets: vscode.SecretStorage): Promise<WatsonxRunti
 
   const client = new WatsonxClient({ apiKey, projectId, baseUrl, modelId });
   vscode.window.showInformationMessage(
-    `Bob Context Graph: Connected to watsonx.ai (${modelId}).`
+    `Bob Context Graph: Configured watsonx.ai (${modelId}).`
   );
   return new WatsonxRuntime(client);
 }
 
 // ── Local Granite setup ──────────────────────────────────────────────────────
 
-async function setupLocal(): Promise<WatsonxRuntime | null> {
-  const localClient = new LocalGraniteClient();
-
-  const available = await vscode.window.withProgress(
-    {
-      location: vscode.ProgressLocation.Notification,
-      title: 'Bob Context Graph: Checking for Ollama & Granite model…',
-      cancellable: false,
-    },
-    () => localClient.isAvailable()
-  );
-
-  if (!available) {
-    const action = await vscode.window.showWarningMessage(
-      `IBM Granite 4.2 3B is not available locally. ` +
-      `Make sure Ollama is running and the model is pulled:\n` +
-      `  ollama pull ${LocalGraniteClient.MODEL_ID}`,
-      'Open Ollama Docs',
-      'Retry',
-      'Skip'
-    );
-
-    if (action === 'Open Ollama Docs') {
-      vscode.env.openExternal(vscode.Uri.parse('https://ollama.com/library/granite4.2-3b'));
-    }
-
-    if (action === 'Retry') {
-      return setupLocal();
-    }
-
-    // Fall back — keep 'local' stored so we attempt again next restart
+async function setupLocal(bundleDir: string): Promise<WatsonxRuntime | null> {
+  const client = new LocalGraniteClient({bundleDir});
+  try {
+    await vscode.window.withProgress({location: vscode.ProgressLocation.Notification, title: 'Loading bundled IBM Granite 4.2 3B…', cancellable: true}, async (_progress, token) => {
+      const subscription = token.onCancellationRequested(() => client.dispose());
+      try { await client.start(); } finally { subscription.dispose(); }
+    });
+    return new WatsonxRuntime(client);
+  } catch (err) {
+    client.dispose();
+    vscode.window.showWarningMessage(`Local Granite unavailable: ${String(err)}. Deterministic analysis remains available; retry with Configure AI Provider.`);
     return null;
   }
-
-  vscode.window.showInformationMessage(
-    `Bob Context Graph: Using local IBM Granite 4.2 3B via Ollama.`
-  );
-  return new WatsonxRuntime(localClient);
 }
 
 /**
@@ -182,7 +158,8 @@ async function setupLocal(): Promise<WatsonxRuntime | null> {
  */
 export async function restoreAiProvider(
   secrets: vscode.SecretStorage,
-  provider: AiProvider
+  provider: AiProvider,
+  bundleDir: string
 ): Promise<WatsonxRuntime | null> {
   if (provider === 'watsonx') {
     const apiKey = await secrets.get(SECRET_API_KEY);
@@ -204,18 +181,10 @@ export async function restoreAiProvider(
     }
 
     // Credentials gone — re-run setup
-    return runAiSetup(secrets);
+    return (await runAiSetup(secrets, bundleDir)) ?? null;
   }
 
-  if (provider === 'local') {
-    const localClient = new LocalGraniteClient();
-    const available = await localClient.isAvailable();
-    if (available) {
-      return new WatsonxRuntime(localClient);
-    }
-    // Ollama not running; silently skip (user can retry via command)
-    return null;
-  }
+  if (provider === 'local') return setupLocal(bundleDir);
 
   return null;
 }

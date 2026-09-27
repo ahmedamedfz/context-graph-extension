@@ -34,6 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DependencyAnalyzer = void 0;
+const ComposeDependencies_1 = require("./ComposeDependencies");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 /**
@@ -55,8 +56,8 @@ class DependencyAnalyzer {
         const configDeps = this.findConfigDependencies(serviceRoot, knownServices);
         // Merge, deduplicating by target service
         const merged = new Map();
-        for (const dep of [...restDeps, ...configDeps]) {
-            const existing = merged.get(dep.targetService);
+        for (const dep of [...restDeps, ...configDeps, ...(0, ComposeDependencies_1.polyglotDependencies)(serviceRoot, knownServices)]) {
+            const existing = merged.get(`${dep.type}:${dep.targetService}`);
             if (existing) {
                 if (dep.endpoints) {
                     existing.endpoints = [...(existing.endpoints || []), ...dep.endpoints];
@@ -64,7 +65,7 @@ class DependencyAnalyzer {
                 existing.evidence += '; ' + dep.evidence;
             }
             else {
-                merged.set(dep.targetService, { ...dep });
+                merged.set(`${dep.type}:${dep.targetService}`, { ...dep });
             }
         }
         return Array.from(merged.values());
@@ -98,7 +99,7 @@ class DependencyAnalyzer {
                 // Look for RestTemplate or WebClient usage with service names
                 if (/RestTemplate|WebClient/.test(content)) {
                     for (const svc of knownServices) {
-                        const svcBase = svc.replace('-service', '');
+                        const svcBase = decodeURIComponent(svc.split('/').pop()).replace('-service', '');
                         const regex = new RegExp(`["'\`](?:[^"'\`]*${svcBase}[^"'\`]*)["'\`]`, 'gi');
                         if (regex.test(content)) {
                             deps.push({
@@ -129,7 +130,7 @@ class DependencyAnalyzer {
             try {
                 const content = fs.readFileSync(configFile, 'utf8');
                 for (const svc of knownServices) {
-                    const svcBase = svc.replace('-service', '');
+                    const svcBase = decodeURIComponent(svc.split('/').pop()).replace('-service', '');
                     if (content.includes(svc) || content.includes(svcBase + '.url') || content.includes(svcBase + '-service')) {
                         deps.push({
                             targetService: svc,

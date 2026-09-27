@@ -52,7 +52,7 @@ class ServiceExplorerProvider {
         if (!element) {
             return this.services.map(s => new ServiceItem(s));
         }
-        return element.getChildren();
+        return element instanceof ServiceItem ? element.getChildren() : element.children ?? [];
     }
 }
 exports.ServiceExplorerProvider = ServiceExplorerProvider;
@@ -68,42 +68,27 @@ class ServiceItem extends vscode.TreeItem {
         this.contextValue = 'service';
     }
     getChildren() {
-        const items = [];
         const ctx = this.context;
-        // APIs section
-        if (ctx.apis.length > 0) {
-            const apisHeader = new ServiceItem({ ...ctx, identity: { ...ctx.identity, name: `REST APIs (${ctx.apis.length})` } });
-            apisHeader.collapsibleState = vscode.TreeItemCollapsibleState.None;
-            apisHeader.iconPath = new vscode.ThemeIcon('symbol-method');
-            apisHeader.description = ctx.apis.map(a => `${a.method} ${a.path}`).slice(0, 3).join(', ');
-            items.push(apisHeader);
-        }
-        // Database section
-        if (ctx.database.length > 0) {
-            const dbHeader = new ServiceItem({ ...ctx, identity: { ...ctx.identity, name: `Tables (${ctx.database.length})` } });
-            dbHeader.collapsibleState = vscode.TreeItemCollapsibleState.None;
-            dbHeader.iconPath = new vscode.ThemeIcon('database');
-            dbHeader.description = ctx.database.map(t => t.tableName).join(', ');
-            items.push(dbHeader);
-        }
-        // Dependencies
-        const restDeps = ctx.dependencies.filter(d => d.type === 'REST');
-        if (restDeps.length > 0) {
-            const depsHeader = new ServiceItem({ ...ctx, identity: { ...ctx.identity, name: `Depends on (${restDeps.length})` } });
-            depsHeader.collapsibleState = vscode.TreeItemCollapsibleState.None;
-            depsHeader.iconPath = new vscode.ThemeIcon('references');
-            depsHeader.description = restDeps.map(d => d.targetService).join(', ');
-            items.push(depsHeader);
-        }
-        // Semantic summary
-        if (ctx.semanticSummary) {
-            const summaryItem = new ServiceItem({ ...ctx, identity: { ...ctx.identity, name: 'Summary' } });
-            summaryItem.collapsibleState = vscode.TreeItemCollapsibleState.None;
-            summaryItem.iconPath = new vscode.ThemeIcon('comment');
-            summaryItem.tooltip = ctx.semanticSummary;
-            summaryItem.description = ctx.semanticSummary.slice(0, 60) + (ctx.semanticSummary.length > 60 ? '…' : '');
-            items.push(summaryItem);
-        }
+        const leaf = (label, description) => {
+            const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
+            item.description = description;
+            item.tooltip = description;
+            return item;
+        };
+        const group = (label, children) => {
+            const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.Collapsed);
+            item.children = children;
+            return item;
+        };
+        const items = [];
+        items.push(group(`REST APIs (${ctx.apis.length})`, ctx.apis.map(api => group(`${api.method} ${api.path}`, [
+            leaf('Request', api.requestModel ?? 'Unknown'), leaf('Response', api.responseModel ?? 'Unknown'),
+            leaf('Description', api.semanticDescription ?? 'Not generated'),
+        ]))));
+        items.push(group(`Tables (${ctx.database.length})`, ctx.database.map(table => group(table.tableName, table.columns.map(column => leaf(column.name, `${column.type}${column.isPrimaryKey ? ' · primary key' : ''}`))))));
+        items.push(group(`Dependencies (${ctx.dependencies.length})`, ctx.dependencies.map(dep => leaf(`${dep.type}: ${dep.targetService}`, dep.evidence))));
+        if (ctx.semanticSummary)
+            items.push(leaf('Summary', ctx.semanticSummary));
         return items;
     }
     getStatusIcon(status) {

@@ -6,6 +6,10 @@ import { getGraphHtml } from './graphHtml';
 export class GraphWebviewProvider {
   private static currentPanel: vscode.WebviewPanel | undefined;
 
+  static update(graph: SystemContextGraph, impactReport: ImpactReport | null) {
+    this.currentPanel?.webview.postMessage({type: 'update', graph: graphToVisualization(graph), impactReport});
+  }
+
   /**
    * Show or update the graph webview.
    * F22: nonce is generated per show() call for CSP.
@@ -42,6 +46,7 @@ export class GraphWebviewProvider {
       column ?? vscode.ViewColumn.One,
       {
         enableScripts: true,
+        localResourceRoots: [],
         retainContextWhenHidden: true,
       }
     );
@@ -111,7 +116,7 @@ function graphToVisualization(graph: SystemContextGraph): object {
 function summarizeData(node: any): object {
   if (node.type === 'DATABASE') {
     const db = node.data as any;
-    return { name: db.name, tableCount: db.tables?.length ?? 0, owner: db.ownerServiceId };
+    return { name: db.name, tableCount: db.tables?.length ?? 0, owner: db.ownerServiceId, tables: db.tables };
   }
   const svc = node.data as any;
   return {
@@ -124,5 +129,9 @@ function summarizeData(node: any): object {
     status: svc?.status,
     analyzedAt: svc?.analyzedAt,
     semanticSummary: svc?.semanticSummary,
+    apis: svc?.apis ?? [],
+    tables: svc?.database ?? [],
+    dependencies: svc?.dependencies ?? [],
+    coverage: svc?.coverage,
   };
 }

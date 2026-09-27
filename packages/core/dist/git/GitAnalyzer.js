@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GitAnalyzer = void 0;
 const child_process_1 = require("child_process");
 const crypto = __importStar(require("crypto"));
+const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 /**
  * Git operations for commit detection and diff analysis.
@@ -78,21 +79,26 @@ class GitAnalyzer {
      * Get list of changed files between two commits.
      */
     getChangedFiles(oldCommit, newCommit) {
+        if (!this.isValidCommit(oldCommit) || !this.isValidCommit(newCommit))
+            return [];
         try {
-            const output = (0, child_process_1.execSync)(`git diff --name-status ${oldCommit} ${newCommit}`, {
-                cwd: this.repoPath,
-                encoding: 'utf8',
-                stdio: ['pipe', 'pipe', 'pipe'],
-            }).trim();
-            if (!output)
-                return [];
-            return output.split('\n').map(line => {
-                const [status, ...rest] = line.split('\t');
-                const filePath = rest[rest.length - 1];
-                const changeType = this.mapStatus(status);
-                const category = this.classifyFile(filePath);
-                return { path: filePath, category, changeType };
-            }).filter(f => f.path);
+            const tokens = (0, child_process_1.execFileSync)('git', ['diff', '--name-status', '-z', oldCommit, newCommit, '--'], {
+                cwd: this.repoPath, encoding: 'utf8', env: { ...process.env, GIT_OPTIONAL_LOCKS: '0' }, stdio: ['ignore', 'pipe', 'pipe'],
+            }).split('\0');
+            const result = [];
+            for (let i = 0; i < tokens.length - 1;) {
+                const status = tokens[i++];
+                const file = tokens[i++];
+                if (/^[RC]/.test(status)) {
+                    if (status[0] === 'R')
+                        result.push({ path: file, category: this.classifyFile(file), changeType: 'deleted' });
+                    const target = tokens[i++];
+                    result.push({ path: target, category: this.classifyFile(target), changeType: 'added' });
+                }
+                else
+                    result.push({ path: file, category: this.classifyFile(file), changeType: this.mapStatus(status) });
+            }
+            return result;
         }
         catch {
             return [];
@@ -154,6 +160,10 @@ class GitAnalyzer {
             return 'CONFIG';
         if (basename.endsWith('.go'))
             return 'SERVICE';
+        if (basename.endsWith('.php'))
+            return 'SERVICE';
+        if (/^(?:docker-)?compose\.ya?ml$/.test(basename) || basename === 'dockerfile')
+            return 'CONFIG';
         return 'UNKNOWN';
     }
     mapStatus(status) {
@@ -186,16 +196,24 @@ class GitAnalyzer {
      * Check if given commit hash is valid.
      */
     isValidCommit(hash) {
+        if (!/^[a-f0-9]{7,40}$/.test(hash))
+            return false;
         try {
-            (0, child_process_1.execSync)(`git rev-parse --verify ${hash}`, {
-                cwd: this.repoPath,
-                encoding: 'utf8',
-                stdio: ['pipe', 'pipe', 'pipe'],
-            });
+            (0, child_process_1.execFileSync)('git', ['cat-file', '-e', `${hash}^{commit}`], { cwd: this.repoPath, stdio: 'ignore' });
             return true;
         }
         catch {
             return false;
+        }
+    }
+    readFileAt(commit, file) {
+        if (!this.isValidCommit(commit))
+            return '';
+        try {
+            return (0, child_process_1.execFileSync)('git', ['show', `${commit}:${file}`], { cwd: this.repoPath, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+        }
+        catch {
+            return '';
         }
     }
     /**
@@ -207,56 +225,37 @@ class GitAnalyzer {
      * Returns 'clean' when the working tree is identical to HEAD, or a
      * short hex string when there are uncommitted modifications.
      */
-    getDirtyHash() {
-        try {
-            // --porcelain=v1 gives a stable machine-readable format
-            const statusOutput = (0, child_process_1.execSync)('git status --porcelain=v1', {
-                cwd: this.repoPath,
-                encoding: 'utf8',
-                stdio: ['pipe', 'pipe', 'pipe'],
-            }).trim();
-            if (!statusOutput)
-                return 'clean';
-            // Include a rough content fingerprint: sum of file sizes for modified files.
-            // This is cheap (no hashing of file contents) yet detects edits.
-            const lines = statusOutput.split('\n').filter(Boolean);
-            const fileParts = [];
-            for (const line of lines) {
-                // columns 0-1 = XY status codes, col 3+ = file path (rename: "old -> new")
-                const status = line.slice(0, 2).trim();
-                const filePath = line.slice(3).split(' -> ').pop().trim();
-                fileParts.push(`${status}:${filePath}`);
+    getDirtyHash(ignorePaths = [], scope) {
+        const parts = this.getDirtyFiles(ignorePaths).filter(f => !scope || this.within(path.resolve(this.repoPath, f.path), scope)).map(f => {
+            let content = '';
+            try {
+                content = crypto.createHash('sha256').update(fs.readFileSync(path.resolve(this.repoPath, f.path))).digest('hex');
             }
-            const raw = fileParts.sort().join('\n');
-            return crypto.createHash('sha1').update(raw).digest('hex').slice(0, 12);
-        }
-        catch {
-            return 'clean';
-        }
+            catch { /* deleted */ }
+            return `${f.changeType}:${f.path}:${content}`;
+        });
+        return parts.length ? crypto.createHash('sha256').update(parts.sort().join('\0')).digest('hex').slice(0, 20) : 'clean';
     }
-    /**
-     * Get the list of working-tree dirty files relative to HEAD.
-     * Returns ChangedFile entries for all staged + unstaged modifications,
-     * allowing incremental analysis against uncommitted edits.
-     */
-    getDirtyFiles() {
+    within(file, dir) {
+        const rel = path.relative(path.resolve(dir), file);
+        return rel === '' || (!rel.startsWith('..' + path.sep) && rel !== '..' && !path.isAbsolute(rel));
+    }
+    getDirtyFiles(ignorePaths = []) {
         try {
-            const output = (0, child_process_1.execSync)('git status --porcelain=v1', {
-                cwd: this.repoPath,
-                encoding: 'utf8',
-                stdio: ['pipe', 'pipe', 'pipe'],
-            }).trim();
-            if (!output)
-                return [];
-            return output
-                .split('\n')
-                .filter(Boolean)
-                .map(line => {
-                const xy = line.slice(0, 2);
-                const rawPath = line.slice(3).split(' -> ').pop().trim();
-                const changeType = xy.includes('D') ? 'deleted' : xy.includes('A') || xy.trim() === '??' ? 'added' : 'modified';
-                return { path: rawPath, category: this.classifyFile(rawPath), changeType };
-            });
+            const tokens = (0, child_process_1.execFileSync)('git', ['status', '--porcelain=v1', '-z', '--untracked-files=all'], {
+                cwd: this.repoPath, encoding: 'utf8', env: { ...process.env, GIT_OPTIONAL_LOCKS: '0' }, stdio: ['ignore', 'pipe', 'pipe'],
+            }).split('\0');
+            const results = [];
+            for (let i = 0; i < tokens.length - 1; i++) {
+                const xy = tokens[i].slice(0, 2), file = tokens[i].slice(3);
+                if (/[RC]/.test(xy)) {
+                    const old = tokens[++i];
+                    if (xy.includes('R'))
+                        results.push({ path: old, category: this.classifyFile(old), changeType: 'deleted' });
+                }
+                results.push({ path: file, category: this.classifyFile(file), changeType: xy.includes('D') ? 'deleted' : /[A?RC]/.test(xy) ? 'added' : 'modified' });
+            }
+            return results.filter(f => !f.path.split('/').includes('.context-graph-cache') && !ignorePaths.some(dir => this.within(path.resolve(this.repoPath, f.path), dir)));
         }
         catch {
             return [];

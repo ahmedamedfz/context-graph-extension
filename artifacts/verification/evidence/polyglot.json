@@ -1,0 +1,2497 @@
+{
+  "services": [
+    {
+      "identity": {
+        "serviceId": "services/ai",
+        "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+        "branch": "main",
+        "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+        "name": "ai",
+        "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/ai"
+      },
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "controller": "app",
+          "handlerMethod": "health",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /health"
+        },
+        {
+          "method": "GET",
+          "path": "/ready",
+          "controller": "app",
+          "handlerMethod": "ready",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /ready"
+        },
+        {
+          "method": "POST",
+          "path": "/chat",
+          "controller": "app",
+          "handlerMethod": "chat",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] POST /chat"
+        }
+      ],
+      "database": [],
+      "dependencies": [
+        {
+          "targetService": "services/catalog",
+          "type": "REST",
+          "evidence": "Source reference in app.py"
+        }
+      ],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:23.254Z",
+      "fileCount": 1,
+      "status": "Indexed",
+      "detectedStack": "python",
+      "models": [],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "unsupported",
+        "events": "unsupported"
+      },
+      "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+      "semanticSummary": "[Deterministic] ai: python service; 3 detected endpoints, 0 detected tables."
+    },
+    {
+      "identity": {
+        "serviceId": "services/audit",
+        "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+        "branch": "main",
+        "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+        "name": "audit",
+        "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/audit"
+      },
+      "apis": [
+        {
+          "path": "/health",
+          "method": "ANY",
+          "controller": "index.php",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/audit/index.php",
+            "line": 7,
+            "parser": "native-http",
+            "confidence": "partial"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] ANY /health"
+        },
+        {
+          "path": "/events",
+          "method": "GET",
+          "controller": "index.php",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/audit/index.php",
+            "line": 8,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /events"
+        },
+        {
+          "path": "/events",
+          "method": "POST",
+          "controller": "index.php",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/audit/index.php",
+            "line": 8,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] POST /events"
+        }
+      ],
+      "database": [],
+      "dependencies": [
+        {
+          "targetService": "microshop",
+          "type": "DATABASE",
+          "evidence": "Source reference in index.php"
+        }
+      ],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:23.274Z",
+      "fileCount": 1,
+      "status": "Indexed",
+      "detectedStack": "php",
+      "models": [],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "unsupported",
+        "events": "unsupported"
+      },
+      "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+      "semanticSummary": "[Deterministic] audit: php service; 3 detected endpoints, 0 detected tables."
+    },
+    {
+      "identity": {
+        "serviceId": "services/cart",
+        "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+        "branch": "main",
+        "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+        "name": "cart",
+        "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/cart"
+      },
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "controller": "main",
+          "handlerMethod": "handleFunc",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /health"
+        },
+        {
+          "method": "GET",
+          "path": "/cart/{session}",
+          "controller": "main",
+          "handlerMethod": "handleFunc",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /cart/{session}"
+        },
+        {
+          "method": "PUT",
+          "path": "/cart/{session}",
+          "controller": "main",
+          "handlerMethod": "handleFunc",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] PUT /cart/{session}"
+        },
+        {
+          "method": "DELETE",
+          "path": "/cart/{session}",
+          "controller": "main",
+          "handlerMethod": "handleFunc",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] DELETE /cart/{session}"
+        }
+      ],
+      "database": [],
+      "dependencies": [
+        {
+          "targetService": "redis",
+          "type": "DATABASE",
+          "evidence": "Environment URLs in compose.yaml for services/cart"
+        }
+      ],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:23.293Z",
+      "fileCount": 1,
+      "status": "Indexed",
+      "detectedStack": "go",
+      "models": [],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "unsupported",
+        "events": "unsupported"
+      },
+      "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+      "semanticSummary": "[Deterministic] cart: go service; 4 detected endpoints, 0 detected tables."
+    },
+    {
+      "identity": {
+        "serviceId": "services/catalog",
+        "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+        "branch": "main",
+        "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+        "name": "catalog",
+        "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/catalog"
+      },
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "controller": "app",
+          "handlerMethod": "health",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /health"
+        },
+        {
+          "method": "GET",
+          "path": "/products",
+          "controller": "app",
+          "handlerMethod": "products",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /products"
+        },
+        {
+          "method": "GET",
+          "path": "/products/{sku}",
+          "controller": "app",
+          "handlerMethod": "product",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /products/{sku}"
+        }
+      ],
+      "database": [],
+      "dependencies": [
+        {
+          "targetService": "microshop",
+          "type": "DATABASE",
+          "evidence": "Environment URLs in compose.yaml for services/catalog"
+        }
+      ],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:23.312Z",
+      "fileCount": 1,
+      "status": "Indexed",
+      "detectedStack": "python",
+      "models": [],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "unsupported",
+        "events": "unsupported"
+      },
+      "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+      "semanticSummary": "[Deterministic] catalog: python service; 3 detected endpoints, 0 detected tables."
+    },
+    {
+      "identity": {
+        "serviceId": "services/gateway",
+        "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+        "branch": "main",
+        "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+        "name": "gateway",
+        "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway"
+      },
+      "apis": [
+        {
+          "path": "/api/products",
+          "method": "GET",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 17,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /api/products"
+        },
+        {
+          "path": "/api/cart",
+          "method": "GET",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 18,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /api/cart"
+        },
+        {
+          "path": "/api/cart",
+          "method": "PUT",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 18,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] PUT /api/cart"
+        },
+        {
+          "path": "/api/cart",
+          "method": "DELETE",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 18,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] DELETE /api/cart"
+        },
+        {
+          "path": "/api/stock",
+          "method": "GET",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 19,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /api/stock"
+        },
+        {
+          "path": "/api/pricing",
+          "method": "GET",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 20,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /api/pricing"
+        },
+        {
+          "path": "/api/shipping",
+          "method": "GET",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 21,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /api/shipping"
+        },
+        {
+          "path": "/api/payment",
+          "method": "POST",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 22,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] POST /api/payment"
+        },
+        {
+          "path": "/api/orders",
+          "method": "GET",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 23,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /api/orders"
+        },
+        {
+          "path": "/api/orders",
+          "method": "POST",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 23,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] POST /api/orders"
+        },
+        {
+          "path": "/api/notifications",
+          "method": "GET",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 24,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /api/notifications"
+        },
+        {
+          "path": "/api/audit",
+          "method": "GET",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 25,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /api/audit"
+        },
+        {
+          "path": "/api/ai/chat",
+          "method": "POST",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 26,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] POST /api/ai/chat"
+        },
+        {
+          "path": "/api/ai/ready",
+          "method": "GET",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 27,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /api/ai/ready"
+        },
+        {
+          "path": "/health",
+          "method": "ANY",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 39,
+            "parser": "native-http",
+            "confidence": "partial"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] ANY /health"
+        },
+        {
+          "path": "/api/services",
+          "method": "GET",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+            "line": 41,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /api/services"
+        }
+      ],
+      "database": [],
+      "dependencies": [
+        {
+          "targetService": "services/storefront",
+          "type": "REST",
+          "evidence": "Source reference in server.js"
+        },
+        {
+          "targetService": "services/catalog",
+          "type": "REST",
+          "evidence": "Proxy route table in server.js"
+        },
+        {
+          "targetService": "services/cart",
+          "type": "REST",
+          "evidence": "Proxy route table in server.js"
+        },
+        {
+          "targetService": "services/inventory",
+          "type": "REST",
+          "evidence": "Proxy route table in server.js"
+        },
+        {
+          "targetService": "services/pricing",
+          "type": "REST",
+          "evidence": "Proxy route table in server.js"
+        },
+        {
+          "targetService": "services/shipping",
+          "type": "REST",
+          "evidence": "Proxy route table in server.js"
+        },
+        {
+          "targetService": "services/payment",
+          "type": "REST",
+          "evidence": "Proxy route table in server.js"
+        },
+        {
+          "targetService": "services/orders",
+          "type": "REST",
+          "evidence": "Proxy route table in server.js"
+        },
+        {
+          "targetService": "services/notifications",
+          "type": "REST",
+          "evidence": "Proxy route table in server.js"
+        },
+        {
+          "targetService": "services/audit",
+          "type": "REST",
+          "evidence": "Proxy route table in server.js"
+        },
+        {
+          "targetService": "services/ai",
+          "type": "REST",
+          "evidence": "Proxy route table in server.js"
+        }
+      ],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:23.330Z",
+      "fileCount": 1,
+      "status": "Indexed",
+      "detectedStack": "node",
+      "models": [],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "unsupported",
+        "events": "unsupported"
+      },
+      "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+      "semanticSummary": "[Deterministic] gateway: node service; 16 detected endpoints, 0 detected tables."
+    },
+    {
+      "identity": {
+        "serviceId": "services/inventory",
+        "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+        "branch": "main",
+        "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+        "name": "inventory",
+        "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/inventory"
+      },
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "controller": "main",
+          "handlerMethod": "handleFunc",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /health"
+        },
+        {
+          "method": "GET",
+          "path": "/stock/{sku}",
+          "controller": "main",
+          "handlerMethod": "handleFunc",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /stock/{sku}"
+        }
+      ],
+      "database": [],
+      "dependencies": [
+        {
+          "targetService": "microshop",
+          "type": "DATABASE",
+          "evidence": "Environment URLs in compose.yaml for services/inventory"
+        }
+      ],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:23.348Z",
+      "fileCount": 1,
+      "status": "Indexed",
+      "detectedStack": "go",
+      "models": [],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "unsupported",
+        "events": "unsupported"
+      },
+      "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+      "semanticSummary": "[Deterministic] inventory: go service; 2 detected endpoints, 0 detected tables."
+    },
+    {
+      "identity": {
+        "serviceId": "services/notifications",
+        "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+        "branch": "main",
+        "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+        "name": "notifications",
+        "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/notifications"
+      },
+      "apis": [
+        {
+          "path": "/health",
+          "method": "ANY",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/notifications/server.js",
+            "line": 13,
+            "parser": "native-http",
+            "confidence": "partial"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] ANY /health"
+        },
+        {
+          "path": "/events",
+          "method": "GET",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/notifications/server.js",
+            "line": 17,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /events"
+        },
+        {
+          "path": "/events",
+          "method": "POST",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/notifications/server.js",
+            "line": 23,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] POST /events"
+        }
+      ],
+      "database": [],
+      "dependencies": [
+        {
+          "targetService": "services/audit",
+          "type": "REST",
+          "evidence": "Source reference in server.js"
+        },
+        {
+          "targetService": "redis",
+          "type": "DATABASE",
+          "evidence": "Environment URLs in compose.yaml for services/notifications"
+        }
+      ],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:23.365Z",
+      "fileCount": 1,
+      "status": "Indexed",
+      "detectedStack": "node",
+      "models": [],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "unsupported",
+        "events": "unsupported"
+      },
+      "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+      "semanticSummary": "[Deterministic] notifications: node service; 3 detected endpoints, 0 detected tables."
+    },
+    {
+      "identity": {
+        "serviceId": "services/orders",
+        "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+        "branch": "main",
+        "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+        "name": "orders",
+        "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/orders"
+      },
+      "apis": [
+        {
+          "method": "GET",
+          "path": "/health",
+          "controller": "app",
+          "handlerMethod": "health",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /health"
+        },
+        {
+          "method": "GET",
+          "path": "/orders",
+          "controller": "app",
+          "handlerMethod": "orders",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /orders"
+        },
+        {
+          "method": "POST",
+          "path": "/orders",
+          "controller": "app",
+          "handlerMethod": "create_order",
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] POST /orders"
+        }
+      ],
+      "database": [],
+      "dependencies": [
+        {
+          "targetService": "services/catalog",
+          "type": "REST",
+          "evidence": "Source reference in app.py"
+        },
+        {
+          "targetService": "services/inventory",
+          "type": "REST",
+          "evidence": "Source reference in app.py"
+        },
+        {
+          "targetService": "services/pricing",
+          "type": "REST",
+          "evidence": "Source reference in app.py"
+        },
+        {
+          "targetService": "services/shipping",
+          "type": "REST",
+          "evidence": "Source reference in app.py"
+        },
+        {
+          "targetService": "services/payment",
+          "type": "REST",
+          "evidence": "Source reference in app.py"
+        },
+        {
+          "targetService": "services/notifications",
+          "type": "REST",
+          "evidence": "Source reference in app.py"
+        },
+        {
+          "targetService": "microshop",
+          "type": "DATABASE",
+          "evidence": "Environment URLs in compose.yaml for services/orders"
+        }
+      ],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:23.381Z",
+      "fileCount": 1,
+      "status": "Indexed",
+      "detectedStack": "python",
+      "models": [],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "unsupported",
+        "events": "unsupported"
+      },
+      "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+      "semanticSummary": "[Deterministic] orders: python service; 3 detected endpoints, 0 detected tables."
+    },
+    {
+      "identity": {
+        "serviceId": "services/payment",
+        "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+        "branch": "main",
+        "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+        "name": "payment",
+        "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/payment"
+      },
+      "apis": [
+        {
+          "path": "/health",
+          "method": "ANY",
+          "controller": "Main.java",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/payment/Main.java",
+            "line": 15,
+            "parser": "native-http",
+            "confidence": "partial"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] ANY /health"
+        },
+        {
+          "path": "/simulate",
+          "method": "POST",
+          "controller": "Main.java",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/payment/Main.java",
+            "line": 16,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] POST /simulate"
+        }
+      ],
+      "database": [],
+      "dependencies": [],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:23.397Z",
+      "fileCount": 1,
+      "status": "Indexed",
+      "detectedStack": "java",
+      "models": [],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "partial",
+        "events": "unsupported"
+      },
+      "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+      "semanticSummary": "[Deterministic] payment: java service; 2 detected endpoints, 0 detected tables."
+    },
+    {
+      "identity": {
+        "serviceId": "services/pricing",
+        "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+        "branch": "main",
+        "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+        "name": "pricing",
+        "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/pricing"
+      },
+      "apis": [
+        {
+          "path": "/health",
+          "method": "ANY",
+          "controller": "Main.java",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/pricing/Main.java",
+            "line": 15,
+            "parser": "native-http",
+            "confidence": "partial"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] ANY /health"
+        },
+        {
+          "path": "/quote",
+          "method": "GET",
+          "controller": "Main.java",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/pricing/Main.java",
+            "line": 16,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /quote"
+        }
+      ],
+      "database": [],
+      "dependencies": [],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:23.415Z",
+      "fileCount": 1,
+      "status": "Indexed",
+      "detectedStack": "java",
+      "models": [],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "partial",
+        "events": "unsupported"
+      },
+      "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+      "semanticSummary": "[Deterministic] pricing: java service; 2 detected endpoints, 0 detected tables."
+    },
+    {
+      "identity": {
+        "serviceId": "services/shipping",
+        "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+        "branch": "main",
+        "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+        "name": "shipping",
+        "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/shipping"
+      },
+      "apis": [
+        {
+          "path": "/health",
+          "method": "ANY",
+          "controller": "index.php",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/shipping/index.php",
+            "line": 4,
+            "parser": "native-http",
+            "confidence": "partial"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] ANY /health"
+        },
+        {
+          "path": "/quote",
+          "method": "GET",
+          "controller": "index.php",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/shipping/index.php",
+            "line": 5,
+            "parser": "native-http",
+            "confidence": "observed"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] GET /quote"
+        }
+      ],
+      "database": [],
+      "dependencies": [],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:23.431Z",
+      "fileCount": 1,
+      "status": "Indexed",
+      "detectedStack": "php",
+      "models": [],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "unsupported",
+        "events": "unsupported"
+      },
+      "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+      "semanticSummary": "[Deterministic] shipping: php service; 2 detected endpoints, 0 detected tables."
+    },
+    {
+      "identity": {
+        "serviceId": "services/storefront",
+        "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+        "branch": "main",
+        "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+        "name": "storefront",
+        "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/storefront"
+      },
+      "apis": [
+        {
+          "path": "/health",
+          "method": "ANY",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/storefront/server.js",
+            "line": 10,
+            "parser": "native-http",
+            "confidence": "partial"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] ANY /health"
+        },
+        {
+          "path": "/",
+          "method": "ANY",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/storefront/server.js",
+            "line": 4,
+            "parser": "native-http",
+            "confidence": "partial"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] ANY /"
+        },
+        {
+          "path": "/app.js",
+          "method": "ANY",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/storefront/server.js",
+            "line": 5,
+            "parser": "native-http",
+            "confidence": "partial"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] ANY /app.js"
+        },
+        {
+          "path": "/style.css",
+          "method": "ANY",
+          "controller": "server.js",
+          "handlerMethod": "native-http",
+          "provenance": {
+            "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/storefront/server.js",
+            "line": 6,
+            "parser": "native-http",
+            "confidence": "partial"
+          },
+          "requestSchema": null,
+          "responseSchema": null,
+          "semanticDescription": "[Deterministic] ANY /style.css"
+        }
+      ],
+      "database": [],
+      "dependencies": [],
+      "events": {
+        "publishes": [],
+        "consumes": []
+      },
+      "analyzedAt": "2026-09-27T10:50:23.447Z",
+      "fileCount": 2,
+      "status": "Indexed",
+      "detectedStack": "node",
+      "models": [],
+      "coverage": {
+        "routes": "static-patterns",
+        "schemas": "unsupported",
+        "events": "unsupported"
+      },
+      "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+      "semanticSummary": "[Deterministic] storefront: node service; 4 detected endpoints, 0 detected tables."
+    }
+  ],
+  "graph": {
+    "nodes": [
+      {
+        "id": "services/ai",
+        "type": "SERVICE",
+        "label": "ai",
+        "data": {
+          "identity": {
+            "serviceId": "services/ai",
+            "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+            "branch": "main",
+            "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+            "name": "ai",
+            "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/ai"
+          },
+          "apis": [
+            {
+              "method": "GET",
+              "path": "/health",
+              "controller": "app",
+              "handlerMethod": "health",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /health"
+            },
+            {
+              "method": "GET",
+              "path": "/ready",
+              "controller": "app",
+              "handlerMethod": "ready",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /ready"
+            },
+            {
+              "method": "POST",
+              "path": "/chat",
+              "controller": "app",
+              "handlerMethod": "chat",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] POST /chat"
+            }
+          ],
+          "database": [],
+          "dependencies": [
+            {
+              "targetService": "services/catalog",
+              "type": "REST",
+              "evidence": "Source reference in app.py"
+            }
+          ],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:23.254Z",
+          "fileCount": 1,
+          "status": "Indexed",
+          "detectedStack": "python",
+          "models": [],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "unsupported",
+            "events": "unsupported"
+          },
+          "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+          "semanticSummary": "[Deterministic] ai: python service; 3 detected endpoints, 0 detected tables."
+        }
+      },
+      {
+        "id": "services/audit",
+        "type": "SERVICE",
+        "label": "audit",
+        "data": {
+          "identity": {
+            "serviceId": "services/audit",
+            "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+            "branch": "main",
+            "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+            "name": "audit",
+            "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/audit"
+          },
+          "apis": [
+            {
+              "path": "/health",
+              "method": "ANY",
+              "controller": "index.php",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/audit/index.php",
+                "line": 7,
+                "parser": "native-http",
+                "confidence": "partial"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] ANY /health"
+            },
+            {
+              "path": "/events",
+              "method": "GET",
+              "controller": "index.php",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/audit/index.php",
+                "line": 8,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /events"
+            },
+            {
+              "path": "/events",
+              "method": "POST",
+              "controller": "index.php",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/audit/index.php",
+                "line": 8,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] POST /events"
+            }
+          ],
+          "database": [],
+          "dependencies": [
+            {
+              "targetService": "microshop",
+              "type": "DATABASE",
+              "evidence": "Source reference in index.php"
+            }
+          ],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:23.274Z",
+          "fileCount": 1,
+          "status": "Indexed",
+          "detectedStack": "php",
+          "models": [],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "unsupported",
+            "events": "unsupported"
+          },
+          "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+          "semanticSummary": "[Deterministic] audit: php service; 3 detected endpoints, 0 detected tables."
+        }
+      },
+      {
+        "id": "services/cart",
+        "type": "SERVICE",
+        "label": "cart",
+        "data": {
+          "identity": {
+            "serviceId": "services/cart",
+            "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+            "branch": "main",
+            "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+            "name": "cart",
+            "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/cart"
+          },
+          "apis": [
+            {
+              "method": "GET",
+              "path": "/health",
+              "controller": "main",
+              "handlerMethod": "handleFunc",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /health"
+            },
+            {
+              "method": "GET",
+              "path": "/cart/{session}",
+              "controller": "main",
+              "handlerMethod": "handleFunc",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /cart/{session}"
+            },
+            {
+              "method": "PUT",
+              "path": "/cart/{session}",
+              "controller": "main",
+              "handlerMethod": "handleFunc",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] PUT /cart/{session}"
+            },
+            {
+              "method": "DELETE",
+              "path": "/cart/{session}",
+              "controller": "main",
+              "handlerMethod": "handleFunc",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] DELETE /cart/{session}"
+            }
+          ],
+          "database": [],
+          "dependencies": [
+            {
+              "targetService": "redis",
+              "type": "DATABASE",
+              "evidence": "Environment URLs in compose.yaml for services/cart"
+            }
+          ],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:23.293Z",
+          "fileCount": 1,
+          "status": "Indexed",
+          "detectedStack": "go",
+          "models": [],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "unsupported",
+            "events": "unsupported"
+          },
+          "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+          "semanticSummary": "[Deterministic] cart: go service; 4 detected endpoints, 0 detected tables."
+        }
+      },
+      {
+        "id": "services/catalog",
+        "type": "SERVICE",
+        "label": "catalog",
+        "data": {
+          "identity": {
+            "serviceId": "services/catalog",
+            "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+            "branch": "main",
+            "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+            "name": "catalog",
+            "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/catalog"
+          },
+          "apis": [
+            {
+              "method": "GET",
+              "path": "/health",
+              "controller": "app",
+              "handlerMethod": "health",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /health"
+            },
+            {
+              "method": "GET",
+              "path": "/products",
+              "controller": "app",
+              "handlerMethod": "products",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /products"
+            },
+            {
+              "method": "GET",
+              "path": "/products/{sku}",
+              "controller": "app",
+              "handlerMethod": "product",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /products/{sku}"
+            }
+          ],
+          "database": [],
+          "dependencies": [
+            {
+              "targetService": "microshop",
+              "type": "DATABASE",
+              "evidence": "Environment URLs in compose.yaml for services/catalog"
+            }
+          ],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:23.312Z",
+          "fileCount": 1,
+          "status": "Indexed",
+          "detectedStack": "python",
+          "models": [],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "unsupported",
+            "events": "unsupported"
+          },
+          "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+          "semanticSummary": "[Deterministic] catalog: python service; 3 detected endpoints, 0 detected tables."
+        }
+      },
+      {
+        "id": "services/gateway",
+        "type": "SERVICE",
+        "label": "gateway",
+        "data": {
+          "identity": {
+            "serviceId": "services/gateway",
+            "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+            "branch": "main",
+            "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+            "name": "gateway",
+            "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway"
+          },
+          "apis": [
+            {
+              "path": "/api/products",
+              "method": "GET",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 17,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /api/products"
+            },
+            {
+              "path": "/api/cart",
+              "method": "GET",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 18,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /api/cart"
+            },
+            {
+              "path": "/api/cart",
+              "method": "PUT",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 18,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] PUT /api/cart"
+            },
+            {
+              "path": "/api/cart",
+              "method": "DELETE",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 18,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] DELETE /api/cart"
+            },
+            {
+              "path": "/api/stock",
+              "method": "GET",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 19,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /api/stock"
+            },
+            {
+              "path": "/api/pricing",
+              "method": "GET",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 20,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /api/pricing"
+            },
+            {
+              "path": "/api/shipping",
+              "method": "GET",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 21,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /api/shipping"
+            },
+            {
+              "path": "/api/payment",
+              "method": "POST",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 22,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] POST /api/payment"
+            },
+            {
+              "path": "/api/orders",
+              "method": "GET",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 23,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /api/orders"
+            },
+            {
+              "path": "/api/orders",
+              "method": "POST",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 23,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] POST /api/orders"
+            },
+            {
+              "path": "/api/notifications",
+              "method": "GET",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 24,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /api/notifications"
+            },
+            {
+              "path": "/api/audit",
+              "method": "GET",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 25,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /api/audit"
+            },
+            {
+              "path": "/api/ai/chat",
+              "method": "POST",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 26,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] POST /api/ai/chat"
+            },
+            {
+              "path": "/api/ai/ready",
+              "method": "GET",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 27,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /api/ai/ready"
+            },
+            {
+              "path": "/health",
+              "method": "ANY",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 39,
+                "parser": "native-http",
+                "confidence": "partial"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] ANY /health"
+            },
+            {
+              "path": "/api/services",
+              "method": "GET",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/gateway/server.js",
+                "line": 41,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /api/services"
+            }
+          ],
+          "database": [],
+          "dependencies": [
+            {
+              "targetService": "services/storefront",
+              "type": "REST",
+              "evidence": "Source reference in server.js"
+            },
+            {
+              "targetService": "services/catalog",
+              "type": "REST",
+              "evidence": "Proxy route table in server.js"
+            },
+            {
+              "targetService": "services/cart",
+              "type": "REST",
+              "evidence": "Proxy route table in server.js"
+            },
+            {
+              "targetService": "services/inventory",
+              "type": "REST",
+              "evidence": "Proxy route table in server.js"
+            },
+            {
+              "targetService": "services/pricing",
+              "type": "REST",
+              "evidence": "Proxy route table in server.js"
+            },
+            {
+              "targetService": "services/shipping",
+              "type": "REST",
+              "evidence": "Proxy route table in server.js"
+            },
+            {
+              "targetService": "services/payment",
+              "type": "REST",
+              "evidence": "Proxy route table in server.js"
+            },
+            {
+              "targetService": "services/orders",
+              "type": "REST",
+              "evidence": "Proxy route table in server.js"
+            },
+            {
+              "targetService": "services/notifications",
+              "type": "REST",
+              "evidence": "Proxy route table in server.js"
+            },
+            {
+              "targetService": "services/audit",
+              "type": "REST",
+              "evidence": "Proxy route table in server.js"
+            },
+            {
+              "targetService": "services/ai",
+              "type": "REST",
+              "evidence": "Proxy route table in server.js"
+            }
+          ],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:23.330Z",
+          "fileCount": 1,
+          "status": "Indexed",
+          "detectedStack": "node",
+          "models": [],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "unsupported",
+            "events": "unsupported"
+          },
+          "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+          "semanticSummary": "[Deterministic] gateway: node service; 16 detected endpoints, 0 detected tables."
+        }
+      },
+      {
+        "id": "services/inventory",
+        "type": "SERVICE",
+        "label": "inventory",
+        "data": {
+          "identity": {
+            "serviceId": "services/inventory",
+            "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+            "branch": "main",
+            "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+            "name": "inventory",
+            "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/inventory"
+          },
+          "apis": [
+            {
+              "method": "GET",
+              "path": "/health",
+              "controller": "main",
+              "handlerMethod": "handleFunc",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /health"
+            },
+            {
+              "method": "GET",
+              "path": "/stock/{sku}",
+              "controller": "main",
+              "handlerMethod": "handleFunc",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /stock/{sku}"
+            }
+          ],
+          "database": [],
+          "dependencies": [
+            {
+              "targetService": "microshop",
+              "type": "DATABASE",
+              "evidence": "Environment URLs in compose.yaml for services/inventory"
+            }
+          ],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:23.348Z",
+          "fileCount": 1,
+          "status": "Indexed",
+          "detectedStack": "go",
+          "models": [],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "unsupported",
+            "events": "unsupported"
+          },
+          "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+          "semanticSummary": "[Deterministic] inventory: go service; 2 detected endpoints, 0 detected tables."
+        }
+      },
+      {
+        "id": "services/notifications",
+        "type": "SERVICE",
+        "label": "notifications",
+        "data": {
+          "identity": {
+            "serviceId": "services/notifications",
+            "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+            "branch": "main",
+            "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+            "name": "notifications",
+            "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/notifications"
+          },
+          "apis": [
+            {
+              "path": "/health",
+              "method": "ANY",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/notifications/server.js",
+                "line": 13,
+                "parser": "native-http",
+                "confidence": "partial"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] ANY /health"
+            },
+            {
+              "path": "/events",
+              "method": "GET",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/notifications/server.js",
+                "line": 17,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /events"
+            },
+            {
+              "path": "/events",
+              "method": "POST",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/notifications/server.js",
+                "line": 23,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] POST /events"
+            }
+          ],
+          "database": [],
+          "dependencies": [
+            {
+              "targetService": "services/audit",
+              "type": "REST",
+              "evidence": "Source reference in server.js"
+            },
+            {
+              "targetService": "redis",
+              "type": "DATABASE",
+              "evidence": "Environment URLs in compose.yaml for services/notifications"
+            }
+          ],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:23.365Z",
+          "fileCount": 1,
+          "status": "Indexed",
+          "detectedStack": "node",
+          "models": [],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "unsupported",
+            "events": "unsupported"
+          },
+          "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+          "semanticSummary": "[Deterministic] notifications: node service; 3 detected endpoints, 0 detected tables."
+        }
+      },
+      {
+        "id": "services/orders",
+        "type": "SERVICE",
+        "label": "orders",
+        "data": {
+          "identity": {
+            "serviceId": "services/orders",
+            "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+            "branch": "main",
+            "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+            "name": "orders",
+            "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/orders"
+          },
+          "apis": [
+            {
+              "method": "GET",
+              "path": "/health",
+              "controller": "app",
+              "handlerMethod": "health",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /health"
+            },
+            {
+              "method": "GET",
+              "path": "/orders",
+              "controller": "app",
+              "handlerMethod": "orders",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /orders"
+            },
+            {
+              "method": "POST",
+              "path": "/orders",
+              "controller": "app",
+              "handlerMethod": "create_order",
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] POST /orders"
+            }
+          ],
+          "database": [],
+          "dependencies": [
+            {
+              "targetService": "services/catalog",
+              "type": "REST",
+              "evidence": "Source reference in app.py"
+            },
+            {
+              "targetService": "services/inventory",
+              "type": "REST",
+              "evidence": "Source reference in app.py"
+            },
+            {
+              "targetService": "services/pricing",
+              "type": "REST",
+              "evidence": "Source reference in app.py"
+            },
+            {
+              "targetService": "services/shipping",
+              "type": "REST",
+              "evidence": "Source reference in app.py"
+            },
+            {
+              "targetService": "services/payment",
+              "type": "REST",
+              "evidence": "Source reference in app.py"
+            },
+            {
+              "targetService": "services/notifications",
+              "type": "REST",
+              "evidence": "Source reference in app.py"
+            },
+            {
+              "targetService": "microshop",
+              "type": "DATABASE",
+              "evidence": "Environment URLs in compose.yaml for services/orders"
+            }
+          ],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:23.381Z",
+          "fileCount": 1,
+          "status": "Indexed",
+          "detectedStack": "python",
+          "models": [],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "unsupported",
+            "events": "unsupported"
+          },
+          "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+          "semanticSummary": "[Deterministic] orders: python service; 3 detected endpoints, 0 detected tables."
+        }
+      },
+      {
+        "id": "services/payment",
+        "type": "SERVICE",
+        "label": "payment",
+        "data": {
+          "identity": {
+            "serviceId": "services/payment",
+            "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+            "branch": "main",
+            "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+            "name": "payment",
+            "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/payment"
+          },
+          "apis": [
+            {
+              "path": "/health",
+              "method": "ANY",
+              "controller": "Main.java",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/payment/Main.java",
+                "line": 15,
+                "parser": "native-http",
+                "confidence": "partial"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] ANY /health"
+            },
+            {
+              "path": "/simulate",
+              "method": "POST",
+              "controller": "Main.java",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/payment/Main.java",
+                "line": 16,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] POST /simulate"
+            }
+          ],
+          "database": [],
+          "dependencies": [],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:23.397Z",
+          "fileCount": 1,
+          "status": "Indexed",
+          "detectedStack": "java",
+          "models": [],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "partial",
+            "events": "unsupported"
+          },
+          "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+          "semanticSummary": "[Deterministic] payment: java service; 2 detected endpoints, 0 detected tables."
+        }
+      },
+      {
+        "id": "services/pricing",
+        "type": "SERVICE",
+        "label": "pricing",
+        "data": {
+          "identity": {
+            "serviceId": "services/pricing",
+            "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+            "branch": "main",
+            "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+            "name": "pricing",
+            "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/pricing"
+          },
+          "apis": [
+            {
+              "path": "/health",
+              "method": "ANY",
+              "controller": "Main.java",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/pricing/Main.java",
+                "line": 15,
+                "parser": "native-http",
+                "confidence": "partial"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] ANY /health"
+            },
+            {
+              "path": "/quote",
+              "method": "GET",
+              "controller": "Main.java",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/pricing/Main.java",
+                "line": 16,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /quote"
+            }
+          ],
+          "database": [],
+          "dependencies": [],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:23.415Z",
+          "fileCount": 1,
+          "status": "Indexed",
+          "detectedStack": "java",
+          "models": [],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "partial",
+            "events": "unsupported"
+          },
+          "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+          "semanticSummary": "[Deterministic] pricing: java service; 2 detected endpoints, 0 detected tables."
+        }
+      },
+      {
+        "id": "services/shipping",
+        "type": "SERVICE",
+        "label": "shipping",
+        "data": {
+          "identity": {
+            "serviceId": "services/shipping",
+            "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+            "branch": "main",
+            "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+            "name": "shipping",
+            "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/shipping"
+          },
+          "apis": [
+            {
+              "path": "/health",
+              "method": "ANY",
+              "controller": "index.php",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/shipping/index.php",
+                "line": 4,
+                "parser": "native-http",
+                "confidence": "partial"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] ANY /health"
+            },
+            {
+              "path": "/quote",
+              "method": "GET",
+              "controller": "index.php",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/shipping/index.php",
+                "line": 5,
+                "parser": "native-http",
+                "confidence": "observed"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] GET /quote"
+            }
+          ],
+          "database": [],
+          "dependencies": [],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:23.431Z",
+          "fileCount": 1,
+          "status": "Indexed",
+          "detectedStack": "php",
+          "models": [],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "unsupported",
+            "events": "unsupported"
+          },
+          "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+          "semanticSummary": "[Deterministic] shipping: php service; 2 detected endpoints, 0 detected tables."
+        }
+      },
+      {
+        "id": "services/storefront",
+        "type": "SERVICE",
+        "label": "storefront",
+        "data": {
+          "identity": {
+            "serviceId": "services/storefront",
+            "repository": "/Users/ahmadfariz/Projects/codex/microservices-demo",
+            "branch": "main",
+            "commitHash": "88b679bde27f67f6a9b3b6e5fbfa4573c5c941c1",
+            "name": "storefront",
+            "rootPath": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/storefront"
+          },
+          "apis": [
+            {
+              "path": "/health",
+              "method": "ANY",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/storefront/server.js",
+                "line": 10,
+                "parser": "native-http",
+                "confidence": "partial"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] ANY /health"
+            },
+            {
+              "path": "/",
+              "method": "ANY",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/storefront/server.js",
+                "line": 4,
+                "parser": "native-http",
+                "confidence": "partial"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] ANY /"
+            },
+            {
+              "path": "/app.js",
+              "method": "ANY",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/storefront/server.js",
+                "line": 5,
+                "parser": "native-http",
+                "confidence": "partial"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] ANY /app.js"
+            },
+            {
+              "path": "/style.css",
+              "method": "ANY",
+              "controller": "server.js",
+              "handlerMethod": "native-http",
+              "provenance": {
+                "file": "/Users/ahmadfariz/Projects/codex/microservices-demo/services/storefront/server.js",
+                "line": 6,
+                "parser": "native-http",
+                "confidence": "partial"
+              },
+              "requestSchema": null,
+              "responseSchema": null,
+              "semanticDescription": "[Deterministic] ANY /style.css"
+            }
+          ],
+          "database": [],
+          "dependencies": [],
+          "events": {
+            "publishes": [],
+            "consumes": []
+          },
+          "analyzedAt": "2026-09-27T10:50:23.447Z",
+          "fileCount": 2,
+          "status": "Indexed",
+          "detectedStack": "node",
+          "models": [],
+          "coverage": {
+            "routes": "static-patterns",
+            "schemas": "unsupported",
+            "events": "unsupported"
+          },
+          "configurationRevision": "b78276d301777a248454402ecb68122355e036dce4ebe80b8f44fe2c9bbf700a",
+          "semanticSummary": "[Deterministic] storefront: node service; 4 detected endpoints, 0 detected tables."
+        }
+      },
+      {
+        "id": "db:microshop",
+        "type": "DATABASE",
+        "label": "microshop",
+        "data": {
+          "name": "microshop",
+          "tables": [],
+          "ownerServiceId": "services/audit",
+          "ownerServiceIds": [
+            "services/audit",
+            "services/catalog",
+            "services/inventory",
+            "services/orders"
+          ]
+        }
+      },
+      {
+        "id": "db:redis",
+        "type": "DATABASE",
+        "label": "redis",
+        "data": {
+          "name": "redis",
+          "tables": [],
+          "ownerServiceId": "services/cart",
+          "ownerServiceIds": [
+            "services/cart",
+            "services/notifications"
+          ]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "services/audit->db:microshop",
+        "type": "SERVICE_USES_DATABASE",
+        "source": "services/audit",
+        "target": "db:microshop",
+        "label": "uses"
+      },
+      {
+        "id": "services/cart->db:redis",
+        "type": "SERVICE_USES_DATABASE",
+        "source": "services/cart",
+        "target": "db:redis",
+        "label": "uses"
+      },
+      {
+        "id": "services/catalog->db:microshop",
+        "type": "SERVICE_USES_DATABASE",
+        "source": "services/catalog",
+        "target": "db:microshop",
+        "label": "uses"
+      },
+      {
+        "id": "services/inventory->db:microshop",
+        "type": "SERVICE_USES_DATABASE",
+        "source": "services/inventory",
+        "target": "db:microshop",
+        "label": "uses"
+      },
+      {
+        "id": "services/notifications->db:redis",
+        "type": "SERVICE_USES_DATABASE",
+        "source": "services/notifications",
+        "target": "db:redis",
+        "label": "uses"
+      },
+      {
+        "id": "services/orders->db:microshop",
+        "type": "SERVICE_USES_DATABASE",
+        "source": "services/orders",
+        "target": "db:microshop",
+        "label": "uses"
+      },
+      {
+        "id": "services/ai->services/catalog",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/ai",
+        "target": "services/catalog",
+        "label": "depends on"
+      },
+      {
+        "id": "services/gateway->services/storefront",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/gateway",
+        "target": "services/storefront",
+        "label": "depends on"
+      },
+      {
+        "id": "services/gateway->services/catalog",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/gateway",
+        "target": "services/catalog",
+        "label": "depends on"
+      },
+      {
+        "id": "services/gateway->services/cart",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/gateway",
+        "target": "services/cart",
+        "label": "depends on"
+      },
+      {
+        "id": "services/gateway->services/inventory",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/gateway",
+        "target": "services/inventory",
+        "label": "depends on"
+      },
+      {
+        "id": "services/gateway->services/pricing",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/gateway",
+        "target": "services/pricing",
+        "label": "depends on"
+      },
+      {
+        "id": "services/gateway->services/shipping",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/gateway",
+        "target": "services/shipping",
+        "label": "depends on"
+      },
+      {
+        "id": "services/gateway->services/payment",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/gateway",
+        "target": "services/payment",
+        "label": "depends on"
+      },
+      {
+        "id": "services/gateway->services/orders",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/gateway",
+        "target": "services/orders",
+        "label": "depends on"
+      },
+      {
+        "id": "services/gateway->services/notifications",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/gateway",
+        "target": "services/notifications",
+        "label": "depends on"
+      },
+      {
+        "id": "services/gateway->services/audit",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/gateway",
+        "target": "services/audit",
+        "label": "depends on"
+      },
+      {
+        "id": "services/gateway->services/ai",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/gateway",
+        "target": "services/ai",
+        "label": "depends on"
+      },
+      {
+        "id": "services/notifications->services/audit",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/notifications",
+        "target": "services/audit",
+        "label": "depends on"
+      },
+      {
+        "id": "services/orders->services/catalog",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/orders",
+        "target": "services/catalog",
+        "label": "depends on"
+      },
+      {
+        "id": "services/orders->services/inventory",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/orders",
+        "target": "services/inventory",
+        "label": "depends on"
+      },
+      {
+        "id": "services/orders->services/pricing",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/orders",
+        "target": "services/pricing",
+        "label": "depends on"
+      },
+      {
+        "id": "services/orders->services/shipping",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/orders",
+        "target": "services/shipping",
+        "label": "depends on"
+      },
+      {
+        "id": "services/orders->services/payment",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/orders",
+        "target": "services/payment",
+        "label": "depends on"
+      },
+      {
+        "id": "services/orders->services/notifications",
+        "type": "SERVICE_DEPENDS_ON_SERVICE",
+        "source": "services/orders",
+        "target": "services/notifications",
+        "label": "depends on"
+      }
+    ],
+    "generatedAt": "2026-09-27T10:50:23.448Z"
+  },
+  "cacheStats": {
+    "cached": 0,
+    "refreshed": 12,
+    "failed": 0
+  }
+}
